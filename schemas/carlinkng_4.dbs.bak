@@ -1,0 +1,1803 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="carlinkng" id="Project_4f117d0" template="Default" database="PostgreSQL" >
+	<schema name="carlinkng" schemaname="carlinkng" >
+		<table name="auction" generator_rows="100" >
+			<column name="id" type="serial" jt="4" mandatory="y" />
+			<column name="object_id" type="integer" jt="4" />
+			<index name="pk_auction" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="idx_auction" unique="NORMAL" >
+				<column name="object_id" />
+			</index>
+			<fk name="fk_auction_car" to_schema="carlinkng" to_table="objects" >
+				<fk_column name="object_id" pk="id" />
+			</fk>
+		</table>
+		<table name="auction_bid" generator_rows="150" >
+			<comment><![CDATA[Ставки]]></comment>
+			<column name="id" type="serial" jt="4" />
+			<column name="summ" type="numeric" length="10" decimal="2" jt="2" mandatory="y" >
+				<comment><![CDATA[Величина ставки]]></comment>
+			</column>
+			<column name="profile_id" type="serial" jt="4" />
+			<column name="auction_id" type="integer" jt="4" />
+			<index name="pk_bid" unique="UNIQUE" >
+				<column name="id" />
+			</index>
+			<index name="idx_bid" unique="NORMAL" >
+				<column name="profile_id" />
+			</index>
+			<index name="idx_bid_0" unique="NORMAL" >
+				<column name="auction_id" />
+			</index>
+			<fk name="fk_bid_profile" to_schema="carlinkng" to_table="profile" >
+				<fk_column name="profile_id" pk="id" />
+			</fk>
+			<fk name="fk_bid_auction" to_schema="carlinkng" to_table="auction" >
+				<fk_column name="auction_id" pk="id" />
+			</fk>
+		</table>
+		<table name="corporate" generator_rows="3" >
+			<comment><![CDATA[Юр лицо]]></comment>
+			<column name="id" type="serial" jt="4" mandatory="y" />
+			<column name="name" type="varchar" length="255" jt="12" />
+			<column name="inn" type="varchar" jt="12" />
+			<column name="ogrn" type="varchar" jt="12" />
+			<column name="kpp" type="varchar" jt="12" />
+			<index name="pk_corporate" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="pk_corporate_0" unique="UNIQUE" >
+				<column name="inn" />
+			</index>
+		</table>
+		<table name="individual" generator_rows="2" >
+			<column name="id" type="serial" jt="4" mandatory="y" />
+			<column name="inn" type="varchar" jt="12" />
+			<index name="pk_individual" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="objects" generator_rows="100" >
+			<column name="id" type="serial" jt="4" mandatory="y" />
+			<column name="name" type="varchar" length="100" jt="12" />
+			<index name="pk_car" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="profile" generator_rows="100" >
+			<column name="id" type="serial" jt="4" mandatory="y" >
+				<comment><![CDATA[Идентификатор]]></comment>
+			</column>
+			<column name="name" type="varchar" jt="12" />
+			<column name="user_id" type="integer" jt="4" mandatory="y" />
+			<column name="trade_unit_id" type="integer" jt="4" />
+			<column name="is_active" type="varchar" length="1" jt="12" >
+				<defo>&#039;N&#039;</defo>
+				<comment><![CDATA[Признак того включен или выключен данный профиль.]]></comment>
+			</column>
+			<index name="pk_profile" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="idx_profile" unique="NORMAL" >
+				<column name="user_id" />
+			</index>
+			<index name="idx_profile_0" unique="NORMAL" >
+				<column name="trade_unit_id" />
+			</index>
+			<fk name="fk_profile" to_schema="carlinkng" to_table="users" delete_action="cascade" >
+				<fk_column name="user_id" pk="id" />
+			</fk>
+			<fk name="fk_profile_trade_unit" to_schema="carlinkng" to_table="trade_unit" >
+				<fk_column name="trade_unit_id" pk="id" />
+			</fk>
+		</table>
+		<table name="trade_unit" >
+			<comment><![CDATA[Обобщенная сущность для юр и физ лиц
+Нужно ввести правило что (corporate_id != null and individual_id == null) or (corporate_id == null and individual_id != null)
+
+]]></comment>
+			<column name="id" type="serial" jt="4" />
+			<column name="corporate_id" type="integer" jt="4" />
+			<column name="individual_id" type="integer" jt="4" />
+			<column name="balance_summ" type="numeric" length="10" decimal="2" jt="2" />
+			<column name="is_active" type="varchar" length="1" jt="12" >
+				<defo>&#039;N&#039;</defo>
+				<comment><![CDATA[Признак того включен или выключен данный профиль.]]></comment>
+			</column>
+			<column name="admin_user_id" type="integer" jt="4" />
+			<index name="idx_trade_unit" unique="NORMAL" >
+				<column name="corporate_id" />
+			</index>
+			<index name="idx_trade_unit_0" unique="NORMAL" >
+				<column name="individual_id" />
+			</index>
+			<index name="pk_trade_unit" unique="UNIQUE" >
+				<column name="id" />
+			</index>
+			<fk name="fk_trade_unit_individual" to_schema="carlinkng" to_table="individual" >
+				<fk_column name="individual_id" pk="id" />
+			</fk>
+			<fk name="fk_trade_unit_corporate" to_schema="carlinkng" to_table="users" >
+				<fk_column name="admin_user_id" pk="id" />
+			</fk>
+			<fk name="fk_trade_unit" to_schema="carlinkng" to_table="corporate" >
+				<fk_column name="corporate_id" pk="id" />
+			</fk>
+		</table>
+		<table name="users" generator_rows="3" >
+			<column name="id" type="serial" jt="4" mandatory="y" />
+			<column name="login" type="varchar" length="50" jt="12" mandatory="y" />
+			<column name="status" type="varchar" length="32" jt="12" >
+				<defo>&#039;GUEST&#039;</defo>
+			</column>
+			<column name="user_firstname" type="varchar" jt="12" />
+			<column name="user_lastname" type="varchar" jt="12" />
+			<index name="pk_users" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+	</schema>
+	<connector name="PostgreSQL" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.0.0.jre6.jar" driver_desc="Standard" host="192.168.1.56" port="5432" instance="carlinkng" user="carl" passwd="Y25nQGNhcmxpbmsx" />
+	<connector name="new_carlink" database="MySql" driver_class="com.mysql.jdbc.Driver" driver_jar="mysql-connector-java-5.1.40-bin.jar" driver_desc="Standard" host="localhost" port="3306" instance="information_schema" user="root" />
+	<connector name="old_carlink" database="MySql" driver_class="com.mysql.jdbc.Driver" driver_jar="mysql-connector-java-5.1.40-bin.jar" driver_desc="Standard" host="localhost" port="3306" instance="new_carlink" user="root" />
+	<layout name="Default Layout" id="Layout_2d3557ac" show_page_borders="y" show_relation="columns" >
+		<entity schema="carlinkng" name="corporate" color="bcd5f1" x="136" y="391" />
+		<entity schema="carlinkng" name="individual" color="bcd5f1" x="51" y="391" />
+		<entity schema="carlinkng" name="users" color="bcd5f1" x="255" y="51" />
+		<entity schema="carlinkng" name="auction" color="bcd5f1" x="595" y="153" />
+		<entity schema="carlinkng" name="auction_bid" color="bcd5f1" x="442" y="187" />
+		<entity schema="carlinkng" name="objects" color="bcd5f1" x="612" y="306" />
+		<entity schema="carlinkng" name="trade_unit" color="bcd5f1" x="51" y="204" />
+		<entity schema="carlinkng" name="profile" color="bcd5f1" x="272" y="255" />
+		<entity schema="carlinkng" name="user" color="bcd5f1" x="408" y="323" />
+		<script name="Sql" id="Query_38d0f8d9" language="SQL" >
+			<string><![CDATA[CREATE SCHEMA carlinkng;
+
+CREATE TABLE carlinkng.objects ( 
+	id                   serial  NOT NULL,
+	name                 varchar(100)  ,
+	CONSTRAINT pk_car PRIMARY KEY ( id )
+ );
+
+CREATE TABLE carlinkng.profile ( 
+	id                   serial  NOT NULL,
+	name                 varchar  ,
+	CONSTRAINT pk_profile PRIMARY KEY ( id )
+ );
+
+COMMENT ON COLUMN carlinkng.profile.id IS 'Идентификатор';
+
+CREATE TABLE carlinkng.users ( 
+	user_id              serial  NOT NULL,
+	login                varchar(50)  NOT NULL,
+	CONSTRAINT pk_users PRIMARY KEY ( user_id )
+ );
+
+CREATE TABLE carlinkng.auction ( 
+	id                   serial  NOT NULL,
+	object_id            integer  ,
+	CONSTRAINT pk_auction PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_auction ON carlinkng.auction ( object_id );
+
+CREATE TABLE carlinkng.bid ( 
+	id                   serial  ,
+	summ                 numeric(10,2)  NOT NULL,
+	profile_id           serial  ,
+	auction_id           integer  ,
+	CONSTRAINT pk_bid UNIQUE ( id ) 
+ );
+
+CREATE INDEX idx_bid ON carlinkng.bid ( profile_id );
+
+CREATE INDEX idx_bid_0 ON carlinkng.bid ( auction_id );
+
+COMMENT ON TABLE carlinkng.bid IS 'Ставки';
+
+COMMENT ON COLUMN carlinkng.bid.summ IS 'Величина ставки';
+
+CREATE TABLE carlinkng.corporate ( 
+	id                   integer  NOT NULL,
+	name                 varchar(255)  ,
+	profile_id           integer  ,
+	CONSTRAINT pk_corporate PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_corporate_0 ON carlinkng.corporate ( profile_id );
+
+COMMENT ON TABLE carlinkng.corporate IS 'Юр лицо';
+
+CREATE TABLE carlinkng.individual ( 
+	id                   serial  NOT NULL,
+	profile_id           integer  ,
+	user_id              integer  NOT NULL,
+	CONSTRAINT pk_individual PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_individual ON carlinkng.individual ( profile_id );
+
+CREATE INDEX idx_individual_0 ON carlinkng.individual ( user_id );
+
+CREATE TABLE carlinkng.staff ( 
+	id                   serial  ,
+	corporate_id         integer  ,
+	user_id              integer  ,
+	is_admin             varchar(1) DEFAULT 'N' 
+ );
+
+CREATE INDEX idx_staff ON carlinkng.staff ( corporate_id );
+
+CREATE INDEX idx_staff_0 ON carlinkng.staff ( user_id );
+
+COMMENT ON TABLE carlinkng.staff IS 'Персонал юр лица';
+
+ALTER TABLE carlinkng.auction ADD CONSTRAINT fk_auction_car FOREIGN KEY ( object_id ) REFERENCES carlinkng.objects( id );
+
+COMMENT ON CONSTRAINT fk_auction_car ON carlinkng.auction IS '';
+
+ALTER TABLE carlinkng.bid ADD CONSTRAINT fk_bid_profile FOREIGN KEY ( profile_id ) REFERENCES carlinkng.profile( id );
+
+COMMENT ON CONSTRAINT fk_bid_profile ON carlinkng.bid IS '';
+
+ALTER TABLE carlinkng.bid ADD CONSTRAINT fk_bid_auction FOREIGN KEY ( auction_id ) REFERENCES carlinkng.auction( id );
+
+COMMENT ON CONSTRAINT fk_bid_auction ON carlinkng.bid IS '';
+
+ALTER TABLE carlinkng.corporate ADD CONSTRAINT fk_corporate_profile FOREIGN KEY ( profile_id ) REFERENCES carlinkng.profile( id ) ON DELETE CASCADE;
+
+COMMENT ON CONSTRAINT fk_corporate_profile ON carlinkng.corporate IS '';
+
+ALTER TABLE carlinkng.individual ADD CONSTRAINT fk_individual_profile FOREIGN KEY ( profile_id ) REFERENCES carlinkng.profile( id ) ON DELETE CASCADE;
+
+COMMENT ON CONSTRAINT fk_individual_profile ON carlinkng.individual IS '';
+
+ALTER TABLE carlinkng.individual ADD CONSTRAINT fk_individual_users FOREIGN KEY ( user_id ) REFERENCES carlinkng.users( user_id );
+
+COMMENT ON CONSTRAINT fk_individual_users ON carlinkng.individual IS '';
+
+ALTER TABLE carlinkng.staff ADD CONSTRAINT fk_staff_corporate FOREIGN KEY ( corporate_id ) REFERENCES carlinkng.corporate( id );
+
+COMMENT ON CONSTRAINT fk_staff_corporate ON carlinkng.staff IS '';
+
+ALTER TABLE carlinkng.staff ADD CONSTRAINT fk_staff_users FOREIGN KEY ( user_id ) REFERENCES carlinkng.users( user_id );
+
+COMMENT ON CONSTRAINT fk_staff_users ON carlinkng.staff IS '';
+
+]]></string>
+		</script>
+		<script name="Sql_001" id="Query_2f30a12a" language="SQL" >
+			<string><![CDATA[CREATE SCHEMA carlinkng;
+
+CREATE TABLE carlinkng.car ( 
+	id                   serial  NOT NULL,
+	name                 varchar(100)  ,
+	CONSTRAINT pk_car PRIMARY KEY ( id )
+ );
+
+CREATE TABLE carlinkng.profile ( 
+	id                   serial  NOT NULL,
+	name                 varchar  ,
+	CONSTRAINT pk_profile PRIMARY KEY ( id )
+ );
+
+COMMENT ON COLUMN carlinkng.profile.id IS 'Идентификатор';
+
+CREATE TABLE carlinkng.users ( 
+	user_id              serial  NOT NULL,
+	login                varchar(50)  NOT NULL,
+	CONSTRAINT pk_users PRIMARY KEY ( user_id )
+ );
+
+CREATE TABLE carlinkng.auction ( 
+	id                   serial  NOT NULL,
+	car_id               integer  ,
+	CONSTRAINT pk_auction PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_auction ON carlinkng.auction ( car_id );
+
+CREATE TABLE carlinkng.bid ( 
+	id                   serial  ,
+	summ                 numeric(10,2)  NOT NULL,
+	profile_id           serial  ,
+	auction_id           integer  ,
+	CONSTRAINT pk_bid UNIQUE ( id ) 
+ );
+
+CREATE INDEX idx_bid ON carlinkng.bid ( profile_id );
+
+CREATE INDEX idx_bid_0 ON carlinkng.bid ( auction_id );
+
+COMMENT ON TABLE carlinkng.bid IS 'Ставки';
+
+COMMENT ON COLUMN carlinkng.bid.summ IS 'Величина ставки';
+
+CREATE TABLE carlinkng.corporate ( 
+	id                   integer  NOT NULL,
+	name                 varchar(255)  ,
+	user_id              integer  NOT NULL,
+	profile_id           integer  ,
+	CONSTRAINT pk_corporate PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_corporate ON carlinkng.corporate ( user_id );
+
+CREATE INDEX idx_corporate_0 ON carlinkng.corporate ( profile_id );
+
+COMMENT ON TABLE carlinkng.corporate IS 'Юр лицо';
+
+COMMENT ON CONSTRAINT fk_corporate ON carlinkng.corporate IS 'входят в юр лицо';
+
+CREATE TABLE carlinkng.individual ( 
+	id                   serial  NOT NULL,
+	profile_id           integer  ,
+	user_id              integer  NOT NULL,
+	CONSTRAINT pk_individual PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_individual ON carlinkng.individual ( profile_id );
+
+CREATE INDEX idx_individual_0 ON carlinkng.individual ( user_id );
+
+ALTER TABLE carlinkng.auction ADD CONSTRAINT fk_auction_car FOREIGN KEY ( car_id ) REFERENCES carlinkng.car( id );
+
+COMMENT ON CONSTRAINT fk_auction_car ON carlinkng.auction IS '';
+
+ALTER TABLE carlinkng.bid ADD CONSTRAINT fk_bid_profile FOREIGN KEY ( profile_id ) REFERENCES carlinkng.profile( id );
+
+COMMENT ON CONSTRAINT fk_bid_profile ON carlinkng.bid IS '';
+
+ALTER TABLE carlinkng.bid ADD CONSTRAINT fk_bid_auction FOREIGN KEY ( auction_id ) REFERENCES carlinkng.auction( id );
+
+COMMENT ON CONSTRAINT fk_bid_auction ON carlinkng.bid IS '';
+
+ALTER TABLE carlinkng.corporate ADD CONSTRAINT fk_corporate FOREIGN KEY ( user_id ) REFERENCES carlinkng.users( user_id ) ON DELETE CASCADE;
+
+COMMENT ON CONSTRAINT fk_corporate ON carlinkng.corporate IS 'входят в юр лицо';
+
+ALTER TABLE carlinkng.corporate ADD CONSTRAINT fk_corporate_profile FOREIGN KEY ( profile_id ) REFERENCES carlinkng.profile( id ) ON DELETE CASCADE;
+
+COMMENT ON CONSTRAINT fk_corporate_profile ON carlinkng.corporate IS '';
+
+ALTER TABLE carlinkng.individual ADD CONSTRAINT fk_individual_profile FOREIGN KEY ( profile_id ) REFERENCES carlinkng.profile( id ) ON DELETE CASCADE;
+
+COMMENT ON CONSTRAINT fk_individual_profile ON carlinkng.individual IS '';
+
+ALTER TABLE carlinkng.individual ADD CONSTRAINT fk_individual_users FOREIGN KEY ( user_id ) REFERENCES carlinkng.users( user_id );
+
+COMMENT ON CONSTRAINT fk_individual_users ON carlinkng.individual IS '';
+
+]]></string>
+		</script>
+		<script name="Sql_002" id="Query_23ae279a" language="SQL" >
+			<string><![CDATA[CREATE SCHEMA carlinkng;
+
+CREATE TABLE objects ( 
+	id                   serial  NOT NULL,
+	name                 varchar(100)  ,
+	CONSTRAINT pk_car PRIMARY KEY ( id )
+ );
+
+CREATE TABLE profile ( 
+	id                   serial  NOT NULL,
+	name                 varchar  ,
+	CONSTRAINT pk_profile PRIMARY KEY ( id )
+ );
+
+COMMENT ON COLUMN profile.id IS 'Идентификатор';
+
+CREATE TABLE users ( 
+	user_id              serial  NOT NULL,
+	login                varchar(50)  NOT NULL,
+	CONSTRAINT pk_users PRIMARY KEY ( user_id )
+ );
+
+CREATE TABLE auction ( 
+	id                   serial  NOT NULL,
+	object_id            integer  ,
+	CONSTRAINT pk_auction PRIMARY KEY ( id ),
+	CONSTRAINT fk_auction_car FOREIGN KEY ( object_id ) REFERENCES objects( id )    
+ );
+
+CREATE INDEX idx_auction ON auction ( object_id );
+
+CREATE TABLE bid ( 
+	id                   serial  ,
+	summ                 numeric(10,2)  NOT NULL,
+	profile_id           serial  ,
+	auction_id           integer  ,
+	CONSTRAINT pk_bid UNIQUE ( id ) ,
+	CONSTRAINT fk_bid_profile FOREIGN KEY ( profile_id ) REFERENCES profile( id )    ,
+	CONSTRAINT fk_bid_auction FOREIGN KEY ( auction_id ) REFERENCES auction( id )    
+ );
+
+CREATE INDEX idx_bid ON bid ( profile_id );
+
+CREATE INDEX idx_bid_0 ON bid ( auction_id );
+
+COMMENT ON TABLE bid IS 'Ставки';
+
+COMMENT ON COLUMN bid.summ IS 'Величина ставки';
+
+CREATE TABLE corporate ( 
+	id                   integer  NOT NULL,
+	name                 varchar(255)  ,
+	profile_id           integer  ,
+	CONSTRAINT pk_corporate PRIMARY KEY ( id ),
+	CONSTRAINT fk_corporate_profile FOREIGN KEY ( profile_id ) REFERENCES profile( id ) ON DELETE CASCADE  
+ );
+
+CREATE INDEX idx_corporate_0 ON corporate ( profile_id );
+
+COMMENT ON TABLE corporate IS 'Юр лицо';
+
+CREATE TABLE individual ( 
+	id                   serial  NOT NULL,
+	profile_id           integer  ,
+	user_id              integer  NOT NULL,
+	CONSTRAINT pk_individual PRIMARY KEY ( id ),
+	CONSTRAINT fk_individual_profile FOREIGN KEY ( profile_id ) REFERENCES profile( id ) ON DELETE CASCADE  ,
+	CONSTRAINT fk_individual_users FOREIGN KEY ( user_id ) REFERENCES users( user_id )    
+ );
+
+CREATE INDEX idx_individual ON individual ( profile_id );
+
+CREATE INDEX idx_individual_0 ON individual ( user_id );
+
+CREATE TABLE staff ( 
+	id                   serial  ,
+	corporate_id         integer  ,
+	user_id              integer  ,
+	is_admin             varchar(1) DEFAULT 'N' ,
+	CONSTRAINT fk_staff_corporate FOREIGN KEY ( corporate_id ) REFERENCES corporate( id )    ,
+	CONSTRAINT fk_staff_users FOREIGN KEY ( user_id ) REFERENCES users( user_id )    
+ );
+
+CREATE INDEX idx_staff ON staff ( corporate_id );
+
+CREATE INDEX idx_staff_0 ON staff ( user_id );
+
+COMMENT ON TABLE staff IS 'Персонал юр лица';
+
+]]></string>
+		</script>
+		<script name="Sql_003" id="Query_144400ae" language="SQL" >
+			<string><![CDATA[CREATE SCHEMA carlinkng;
+
+CREATE TABLE objects ( 
+	id                   serial  NOT NULL,
+	name                 varchar(100)  ,
+	CONSTRAINT pk_car PRIMARY KEY ( id )
+ );
+
+CREATE TABLE profile ( 
+	id                   serial  NOT NULL,
+	name                 varchar  ,
+	CONSTRAINT pk_profile PRIMARY KEY ( id )
+ );
+
+COMMENT ON COLUMN profile.id IS 'Идентификатор';
+
+CREATE TABLE users ( 
+	user_id              serial  NOT NULL,
+	login                varchar(50)  NOT NULL,
+	CONSTRAINT pk_users PRIMARY KEY ( user_id )
+ );
+
+CREATE TABLE auction ( 
+	id                   serial  NOT NULL,
+	object_id            integer  ,
+	CONSTRAINT pk_auction PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_auction ON auction ( object_id );
+
+CREATE TABLE bid ( 
+	id                   serial  ,
+	summ                 numeric(10,2)  NOT NULL,
+	profile_id           serial  ,
+	auction_id           integer  ,
+	user_id              integer  ,
+	CONSTRAINT pk_bid UNIQUE ( id ) 
+ );
+
+CREATE INDEX idx_bid ON bid ( profile_id );
+
+CREATE INDEX idx_bid_0 ON bid ( auction_id );
+
+CREATE INDEX idx_bid_1 ON bid ( user_id );
+
+COMMENT ON TABLE bid IS 'Ставки';
+
+COMMENT ON COLUMN bid.summ IS 'Величина ставки';
+
+CREATE TABLE corporate ( 
+	id                   integer  NOT NULL,
+	name                 varchar(255)  ,
+	profile_id           integer  ,
+	CONSTRAINT pk_corporate PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_corporate_0 ON corporate ( profile_id );
+
+COMMENT ON TABLE corporate IS 'Юр лицо';
+
+CREATE TABLE individual ( 
+	id                   serial  NOT NULL,
+	profile_id           integer  ,
+	user_id              integer  NOT NULL,
+	CONSTRAINT pk_individual PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_individual ON individual ( profile_id );
+
+CREATE INDEX idx_individual_0 ON individual ( user_id );
+
+CREATE TABLE staff ( 
+	id                   serial  ,
+	corporate_id         integer  ,
+	user_id              integer  ,
+	is_admin             varchar(1) DEFAULT 'N' 
+ );
+
+CREATE INDEX idx_staff ON staff ( corporate_id );
+
+CREATE INDEX idx_staff_0 ON staff ( user_id );
+
+COMMENT ON TABLE staff IS 'Персонал юр лица';
+
+CREATE TABLE user_profile ( 
+	id                   serial  NOT NULL,
+	user_id              integer  ,
+	profile_id           integer  ,
+	CONSTRAINT pk_user_profil PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_user_profile_2 ON user_profile ( user_id );
+
+CREATE INDEX idx_user_profile_21 ON user_profile ( profile_id );
+
+ALTER TABLE auction ADD CONSTRAINT fk_auction_car FOREIGN KEY ( object_id ) REFERENCES objects( id );
+
+COMMENT ON CONSTRAINT fk_auction_car ON auction IS '';
+
+ALTER TABLE bid ADD CONSTRAINT fk_bid_profile FOREIGN KEY ( profile_id ) REFERENCES profile( id );
+
+COMMENT ON CONSTRAINT fk_bid_profile ON bid IS '';
+
+ALTER TABLE bid ADD CONSTRAINT fk_bid_auction FOREIGN KEY ( auction_id ) REFERENCES auction( id );
+
+COMMENT ON CONSTRAINT fk_bid_auction ON bid IS '';
+
+ALTER TABLE bid ADD CONSTRAINT fk_bid_users FOREIGN KEY ( user_id ) REFERENCES users( user_id );
+
+COMMENT ON CONSTRAINT fk_bid_users ON bid IS '';
+
+ALTER TABLE corporate ADD CONSTRAINT fk_corporate_profile FOREIGN KEY ( profile_id ) REFERENCES profile( id ) ON DELETE CASCADE;
+
+COMMENT ON CONSTRAINT fk_corporate_profile ON corporate IS '';
+
+ALTER TABLE individual ADD CONSTRAINT fk_individual_profile FOREIGN KEY ( profile_id ) REFERENCES profile( id ) ON DELETE CASCADE;
+
+COMMENT ON CONSTRAINT fk_individual_profile ON individual IS '';
+
+ALTER TABLE individual ADD CONSTRAINT fk_individual_users FOREIGN KEY ( user_id ) REFERENCES users( user_id );
+
+COMMENT ON CONSTRAINT fk_individual_users ON individual IS '';
+
+ALTER TABLE staff ADD CONSTRAINT fk_staff_corporate FOREIGN KEY ( corporate_id ) REFERENCES corporate( id );
+
+COMMENT ON CONSTRAINT fk_staff_corporate ON staff IS '';
+
+ALTER TABLE staff ADD CONSTRAINT fk_staff_users FOREIGN KEY ( user_id ) REFERENCES users( user_id );
+
+COMMENT ON CONSTRAINT fk_staff_users ON staff IS '';
+
+ALTER TABLE user_profile ADD CONSTRAINT fk_user_profile_users FOREIGN KEY ( user_id ) REFERENCES users( user_id );
+
+COMMENT ON CONSTRAINT fk_user_profile_users ON user_profile IS '';
+
+ALTER TABLE user_profile ADD CONSTRAINT fk_user_profile_profile FOREIGN KEY ( profile_id ) REFERENCES profile( id );
+
+COMMENT ON CONSTRAINT fk_user_profile_profile ON user_profile IS '';
+
+]]></string>
+		</script>
+		<script name="Sql_004" id="Query_40c6eab" language="SQL" >
+			<string><![CDATA[CREATE SCHEMA carlinkng;
+
+CREATE TABLE objects ( 
+	id                   serial  NOT NULL,
+	name                 varchar(100)  ,
+	CONSTRAINT pk_car PRIMARY KEY ( id )
+ );
+
+CREATE TABLE profile ( 
+	id                   serial  NOT NULL,
+	name                 varchar  ,
+	CONSTRAINT pk_profile PRIMARY KEY ( id )
+ );
+
+COMMENT ON COLUMN profile.id IS 'Идентификатор';
+
+CREATE TABLE status ( 
+	cod                  varchar(32)  NOT NULL,
+	name                 varchar DEFAULT <Введите название> ,
+	CONSTRAINT pk_status PRIMARY KEY ( cod )
+ );
+
+COMMENT ON COLUMN status.cod IS 'Короткое обозначение латиницей';
+
+COMMENT ON COLUMN status.name IS 'Наименование выводимое в Пользовательском интерфейсе ';
+
+CREATE TABLE users ( 
+	id                   serial  NOT NULL,
+	login                varchar(50)  NOT NULL,
+	status               varchar(32) DEFAULT 'GUEST' ,
+	user_firstname       varchar  ,
+	user_lastname        varchar  ,
+	CONSTRAINT pk_users PRIMARY KEY ( id )
+ );
+
+CREATE TABLE auction ( 
+	id                   serial  NOT NULL,
+	object_id            integer  ,
+	CONSTRAINT pk_auction PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_auction ON auction ( object_id );
+
+CREATE TABLE bid ( 
+	id                   serial  ,
+	summ                 numeric(10,2)  NOT NULL,
+	profile_id           serial  ,
+	auction_id           integer  ,
+	user_id              integer  ,
+	CONSTRAINT pk_bid UNIQUE ( id ) 
+ );
+
+CREATE INDEX idx_bid ON bid ( profile_id );
+
+CREATE INDEX idx_bid_0 ON bid ( auction_id );
+
+CREATE INDEX idx_bid_1 ON bid ( user_id );
+
+COMMENT ON TABLE bid IS 'Ставки';
+
+COMMENT ON COLUMN bid.summ IS 'Величина ставки';
+
+CREATE TABLE corporate ( 
+	id                   integer  NOT NULL,
+	name                 varchar(255)  ,
+	profile_id           integer  ,
+	CONSTRAINT pk_corporate PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_corporate_0 ON corporate ( profile_id );
+
+COMMENT ON TABLE corporate IS 'Юр лицо';
+
+CREATE TABLE individual ( 
+	id                   serial  NOT NULL,
+	profile_id           integer  ,
+	user_id              integer  NOT NULL,
+	CONSTRAINT pk_individual PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_individual ON individual ( profile_id );
+
+CREATE INDEX idx_individual_0 ON individual ( user_id );
+
+CREATE TABLE staff ( 
+	id                   serial  ,
+	corporate_id         integer  ,
+	user_id              integer  ,
+	is_admin             varchar(1) DEFAULT 'N' 
+ );
+
+CREATE INDEX idx_staff ON staff ( corporate_id );
+
+CREATE INDEX idx_staff_0 ON staff ( user_id );
+
+COMMENT ON TABLE staff IS 'Персонал юр лица';
+
+CREATE TABLE user_profile ( 
+	id                   serial  NOT NULL,
+	user_id              integer  ,
+	profile_id           integer  ,
+	CONSTRAINT pk_user_profil PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_user_profile_2 ON user_profile ( user_id );
+
+CREATE INDEX idx_user_profile_21 ON user_profile ( profile_id );
+
+ALTER TABLE auction ADD CONSTRAINT fk_auction_car FOREIGN KEY ( object_id ) REFERENCES objects( id );
+
+COMMENT ON CONSTRAINT fk_auction_car ON auction IS '';
+
+ALTER TABLE bid ADD CONSTRAINT fk_bid_profile FOREIGN KEY ( profile_id ) REFERENCES profile( id );
+
+COMMENT ON CONSTRAINT fk_bid_profile ON bid IS '';
+
+ALTER TABLE bid ADD CONSTRAINT fk_bid_auction FOREIGN KEY ( auction_id ) REFERENCES auction( id );
+
+COMMENT ON CONSTRAINT fk_bid_auction ON bid IS '';
+
+ALTER TABLE bid ADD CONSTRAINT fk_bid_users FOREIGN KEY ( user_id ) REFERENCES users( id );
+
+COMMENT ON CONSTRAINT fk_bid_users ON bid IS '';
+
+ALTER TABLE corporate ADD CONSTRAINT fk_corporate_profile FOREIGN KEY ( profile_id ) REFERENCES profile( id ) ON DELETE CASCADE;
+
+COMMENT ON CONSTRAINT fk_corporate_profile ON corporate IS '';
+
+ALTER TABLE individual ADD CONSTRAINT fk_individual_profile FOREIGN KEY ( profile_id ) REFERENCES profile( id ) ON DELETE CASCADE;
+
+COMMENT ON CONSTRAINT fk_individual_profile ON individual IS '';
+
+ALTER TABLE individual ADD CONSTRAINT fk_individual_users FOREIGN KEY ( user_id ) REFERENCES users( id );
+
+COMMENT ON CONSTRAINT fk_individual_users ON individual IS '';
+
+ALTER TABLE staff ADD CONSTRAINT fk_staff_corporate FOREIGN KEY ( corporate_id ) REFERENCES corporate( id );
+
+COMMENT ON CONSTRAINT fk_staff_corporate ON staff IS '';
+
+ALTER TABLE staff ADD CONSTRAINT fk_staff_users FOREIGN KEY ( user_id ) REFERENCES users( id );
+
+COMMENT ON CONSTRAINT fk_staff_users ON staff IS '';
+
+ALTER TABLE user_profile ADD CONSTRAINT fk_user_profile_users FOREIGN KEY ( user_id ) REFERENCES users( id );
+
+COMMENT ON CONSTRAINT fk_user_profile_users ON user_profile IS '';
+
+ALTER TABLE user_profile ADD CONSTRAINT fk_user_profile_profile FOREIGN KEY ( profile_id ) REFERENCES profile( id );
+
+COMMENT ON CONSTRAINT fk_user_profile_profile ON user_profile IS '';
+
+]]></string>
+		</script>
+		<script name="Sql_005" id="Query_58fe74f" language="SQL" >
+			<string><![CDATA[CREATE SCHEMA carlinkng;
+
+CREATE TABLE objects ( 
+	id                   serial  NOT NULL,
+	name                 varchar(100)  ,
+	CONSTRAINT pk_car PRIMARY KEY ( id )
+ );
+
+CREATE TABLE profile ( 
+	id                   serial  NOT NULL,
+	name                 varchar  ,
+	CONSTRAINT pk_profile PRIMARY KEY ( id )
+ );
+
+COMMENT ON COLUMN profile.id IS 'Идентификатор';
+
+CREATE TABLE status ( 
+	cod                  varchar(32)  NOT NULL,
+	name                 varchar  ,
+	CONSTRAINT pk_status PRIMARY KEY ( cod )
+ );
+
+COMMENT ON COLUMN status.cod IS 'Короткое обозначение латиницей';
+
+COMMENT ON COLUMN status.name IS 'Наименование выводимое в Пользовательском интерфейсе ';
+
+CREATE TABLE users ( 
+	id                   serial  NOT NULL,
+	login                varchar(50)  NOT NULL,
+	status               varchar(32) DEFAULT 'GUEST' ,
+	user_firstname       varchar  ,
+	user_lastname        varchar  ,
+	CONSTRAINT pk_users PRIMARY KEY ( id )
+ );
+
+CREATE TABLE auction ( 
+	id                   serial  NOT NULL,
+	object_id            integer  ,
+	CONSTRAINT pk_auction PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_auction ON auction ( object_id );
+
+CREATE TABLE auction_bid ( 
+	id                   serial  ,
+	summ                 numeric(10,2)  NOT NULL,
+	profile_id           serial  ,
+	auction_id           integer  ,
+	user_id              integer  ,
+	CONSTRAINT pk_bid UNIQUE ( id ) 
+ );
+
+CREATE INDEX idx_bid ON auction_bid ( profile_id );
+
+CREATE INDEX idx_bid_0 ON auction_bid ( auction_id );
+
+CREATE INDEX idx_bid_1 ON auction_bid ( user_id );
+
+COMMENT ON TABLE auction_bid IS 'Ставки';
+
+COMMENT ON COLUMN auction_bid.summ IS 'Величина ставки';
+
+CREATE TABLE corporate ( 
+	id                   integer  NOT NULL,
+	name                 varchar(255)  ,
+	profile_id           integer  ,
+	inn                  varchar  ,
+	ogrn                 varchar  ,
+	kpp                  varchar  ,
+	CONSTRAINT pk_corporate PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_corporate_0 ON corporate ( profile_id );
+
+COMMENT ON TABLE corporate IS 'Юр лицо';
+
+CREATE TABLE individual ( 
+	id                   serial  NOT NULL,
+	profile_id           integer  ,
+	user_id              integer  NOT NULL,
+	inn                  varchar  ,
+	CONSTRAINT pk_individual PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_individual ON individual ( profile_id );
+
+CREATE INDEX idx_individual_0 ON individual ( user_id );
+
+CREATE TABLE staff ( 
+	id                   serial  ,
+	corporate_id         integer  ,
+	user_id              integer  ,
+	is_admin             varchar(1) DEFAULT 'N' ,
+	corp_position        varchar  
+ );
+
+CREATE INDEX idx_staff ON staff ( corporate_id );
+
+CREATE INDEX idx_staff_0 ON staff ( user_id );
+
+COMMENT ON TABLE staff IS 'Персонал юр лица';
+
+COMMENT ON COLUMN staff.corp_position IS 'Должность в организации';
+
+CREATE TABLE user_profile ( 
+	id                   serial  NOT NULL,
+	user_id              integer  ,
+	profile_id           integer  ,
+	CONSTRAINT pk_user_profil PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_user_profile_2 ON user_profile ( user_id );
+
+CREATE INDEX idx_user_profile_21 ON user_profile ( profile_id );
+
+ALTER TABLE auction ADD CONSTRAINT fk_auction_car FOREIGN KEY ( object_id ) REFERENCES objects( id );
+
+COMMENT ON CONSTRAINT fk_auction_car ON auction IS '';
+
+ALTER TABLE auction_bid ADD CONSTRAINT fk_bid_profile FOREIGN KEY ( profile_id ) REFERENCES profile( id );
+
+COMMENT ON CONSTRAINT fk_bid_profile ON auction_bid IS '';
+
+ALTER TABLE auction_bid ADD CONSTRAINT fk_bid_auction FOREIGN KEY ( auction_id ) REFERENCES auction( id );
+
+COMMENT ON CONSTRAINT fk_bid_auction ON auction_bid IS '';
+
+ALTER TABLE corporate ADD CONSTRAINT fk_corporate_profile FOREIGN KEY ( profile_id ) REFERENCES profile( id ) ON DELETE CASCADE;
+
+COMMENT ON CONSTRAINT fk_corporate_profile ON corporate IS '';
+
+ALTER TABLE individual ADD CONSTRAINT fk_individual_profile FOREIGN KEY ( profile_id ) REFERENCES profile( id ) ON DELETE CASCADE;
+
+COMMENT ON CONSTRAINT fk_individual_profile ON individual IS '';
+
+ALTER TABLE individual ADD CONSTRAINT fk_individual_users FOREIGN KEY ( user_id ) REFERENCES users( id );
+
+COMMENT ON CONSTRAINT fk_individual_users ON individual IS '';
+
+ALTER TABLE staff ADD CONSTRAINT fk_staff_corporate FOREIGN KEY ( corporate_id ) REFERENCES corporate( id );
+
+COMMENT ON CONSTRAINT fk_staff_corporate ON staff IS '';
+
+ALTER TABLE staff ADD CONSTRAINT fk_staff_users FOREIGN KEY ( user_id ) REFERENCES users( id );
+
+COMMENT ON CONSTRAINT fk_staff_users ON staff IS '';
+
+ALTER TABLE user_profile ADD CONSTRAINT fk_user_profile_users FOREIGN KEY ( user_id ) REFERENCES users( id );
+
+COMMENT ON CONSTRAINT fk_user_profile_users ON user_profile IS '';
+
+ALTER TABLE user_profile ADD CONSTRAINT fk_user_profile_profile FOREIGN KEY ( profile_id ) REFERENCES profile( id );
+
+COMMENT ON CONSTRAINT fk_user_profile_profile ON user_profile IS '';
+
+]]></string>
+		</script>
+		<script name="Sql_006" id="Query_d301f2f" language="SQL" >
+			<string><![CDATA[CREATE SCHEMA carlinkng;
+
+CREATE TABLE corporate_0 ( 
+	id                   integer  NOT NULL,
+	name                 varchar(255)  ,
+	profile_id           integer  ,
+	inn                  varchar  ,
+	ogrn                 varchar  ,
+	kpp                  varchar  ,
+	balance_id           integer  ,
+	is_active            varchar(1) DEFAULT 'N' ,
+	CONSTRAINT pk_corporate_2 PRIMARY KEY ( id ),
+	CONSTRAINT pk_corporate_3 UNIQUE ( inn ) ,
+	CONSTRAINT pk_corporate_4 UNIQUE ( balance_id ) 
+ );
+
+CREATE INDEX idx_corporate_1 ON corporate_0 ( profile_id );
+
+COMMENT ON TABLE corporate_0 IS 'Юр лицо';
+
+COMMENT ON COLUMN corporate_0.is_active IS 'Признак того включен или выключен данный профиль.';
+
+CREATE TABLE individual_0 ( 
+	id                   serial  NOT NULL,
+	profile_id           integer  ,
+	user_id              integer  NOT NULL,
+	inn                  varchar  ,
+	balance_id           integer  ,
+	is_active            varchar(1) DEFAULT 'N' ,
+	CONSTRAINT pk_individual_0 PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_individual_2 ON individual_0 ( profile_id );
+
+CREATE INDEX idx_individual_3 ON individual_0 ( user_id );
+
+CREATE INDEX idx_individual_4 ON individual_0 ( balance_id );
+
+COMMENT ON COLUMN individual_0.is_active IS 'Признак того включен или выключен данный профиль.';
+
+CREATE TABLE objects ( 
+	id                   serial  NOT NULL,
+	name                 varchar(100)  ,
+	CONSTRAINT pk_car PRIMARY KEY ( id )
+ );
+
+CREATE TABLE status ( 
+	cod                  varchar(32)  NOT NULL,
+	name                 varchar  ,
+	CONSTRAINT pk_status PRIMARY KEY ( cod )
+ );
+
+COMMENT ON COLUMN status.cod IS 'Короткое обозначение латиницей';
+
+COMMENT ON COLUMN status.name IS 'Наименование выводимое в Пользовательском интерфейсе ';
+
+CREATE TABLE users ( 
+	id                   serial  NOT NULL,
+	login                varchar(50)  NOT NULL,
+	status               varchar(32) DEFAULT 'GUEST' ,
+	user_firstname       varchar  ,
+	user_lastname        varchar  ,
+	CONSTRAINT pk_users PRIMARY KEY ( id )
+ );
+
+CREATE TABLE auction ( 
+	id                   serial  NOT NULL,
+	object_id            integer  ,
+	CONSTRAINT pk_auction PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_auction ON auction ( object_id );
+
+CREATE TABLE corporate ( 
+	id                   integer  NOT NULL,
+	name                 varchar(255)  ,
+	admin_user_id        integer  ,
+	inn                  varchar  ,
+	ogrn                 varchar  ,
+	kpp                  varchar  ,
+	CONSTRAINT pk_corporate PRIMARY KEY ( id ),
+	CONSTRAINT pk_corporate_0 UNIQUE ( inn ) 
+ );
+
+CREATE INDEX idx_corporate ON corporate ( admin_user_id );
+
+COMMENT ON TABLE corporate IS 'Юр лицо';
+
+CREATE TABLE individual ( 
+	id                   serial  NOT NULL,
+	inn                  varchar  ,
+	user_id              integer  ,
+	CONSTRAINT pk_individual PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_individual ON individual ( user_id );
+
+CREATE TABLE staff ( 
+	id                   serial  ,
+	corporate_id         integer  ,
+	user_id              integer  ,
+	is_admin             varchar(1) DEFAULT 'N' ,
+	corp_position        varchar  
+ );
+
+CREATE INDEX idx_staff ON staff ( corporate_id );
+
+CREATE INDEX idx_staff_0 ON staff ( user_id );
+
+COMMENT ON TABLE staff IS 'Персонал юр лица';
+
+COMMENT ON COLUMN staff.corp_position IS 'Должность в организации';
+
+CREATE TABLE trade_unit ( 
+	id                   serial  ,
+	corporate_id         integer  ,
+	individual_id        integer  ,
+	balanse_summ         numeric(10,2)  ,
+	CONSTRAINT pk_trade_unit UNIQUE ( id ) 
+ );
+
+CREATE INDEX idx_trade_unit ON trade_unit ( corporate_id );
+
+CREATE INDEX idx_trade_unit_0 ON trade_unit ( individual_id );
+
+COMMENT ON TABLE trade_unit IS 'Обобщенная сущность для юр и физ лиц
+Нужно ввести правило что (corporate_id != null and individual_id == null) or (corporate_id == null and individual_id != null)
+
+';
+
+CREATE TABLE profile ( 
+	id                   serial  NOT NULL,
+	name                 varchar  ,
+	is_active            varchar(1) DEFAULT 'N' ,
+	user_id              integer  NOT NULL,
+	trade_unit_id        integer  ,
+	CONSTRAINT pk_profile PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_profile ON profile ( user_id );
+
+CREATE INDEX idx_profile_0 ON profile ( trade_unit_id );
+
+COMMENT ON COLUMN profile.id IS 'Идентификатор';
+
+COMMENT ON COLUMN profile.is_active IS 'Признак того включен или выключен данный профиль.';
+
+CREATE TABLE auction_bid ( 
+	id                   serial  ,
+	summ                 numeric(10,2)  NOT NULL,
+	profile_id           serial  ,
+	auction_id           integer  ,
+	CONSTRAINT pk_bid UNIQUE ( id ) 
+ );
+
+CREATE INDEX idx_bid ON auction_bid ( profile_id );
+
+CREATE INDEX idx_bid_0 ON auction_bid ( auction_id );
+
+COMMENT ON TABLE auction_bid IS 'Ставки';
+
+COMMENT ON COLUMN auction_bid.summ IS 'Величина ставки';
+
+ALTER TABLE auction ADD CONSTRAINT fk_auction_car FOREIGN KEY ( object_id ) REFERENCES objects( id );
+
+COMMENT ON CONSTRAINT fk_auction_car ON auction IS '';
+
+ALTER TABLE auction_bid ADD CONSTRAINT fk_bid_profile FOREIGN KEY ( profile_id ) REFERENCES profile( id );
+
+COMMENT ON CONSTRAINT fk_bid_profile ON auction_bid IS '';
+
+ALTER TABLE auction_bid ADD CONSTRAINT fk_bid_auction FOREIGN KEY ( auction_id ) REFERENCES auction( id );
+
+COMMENT ON CONSTRAINT fk_bid_auction ON auction_bid IS '';
+
+ALTER TABLE corporate ADD CONSTRAINT fk_corporate FOREIGN KEY ( admin_user_id ) REFERENCES users( id );
+
+COMMENT ON CONSTRAINT fk_corporate ON corporate IS '';
+
+ALTER TABLE individual ADD CONSTRAINT fk_individual_users FOREIGN KEY ( user_id ) REFERENCES users( id );
+
+COMMENT ON CONSTRAINT fk_individual_users ON individual IS '';
+
+ALTER TABLE profile ADD CONSTRAINT fk_profile FOREIGN KEY ( user_id ) REFERENCES users( id ) ON DELETE CASCADE;
+
+COMMENT ON CONSTRAINT fk_profile ON profile IS '';
+
+ALTER TABLE profile ADD CONSTRAINT fk_profile_trade_unit FOREIGN KEY ( trade_unit_id ) REFERENCES trade_unit( id );
+
+COMMENT ON CONSTRAINT fk_profile_trade_unit ON profile IS '';
+
+ALTER TABLE staff ADD CONSTRAINT fk_staff_corporate FOREIGN KEY ( corporate_id ) REFERENCES corporate( id );
+
+COMMENT ON CONSTRAINT fk_staff_corporate ON staff IS '';
+
+ALTER TABLE staff ADD CONSTRAINT fk_staff_users FOREIGN KEY ( user_id ) REFERENCES users( id );
+
+COMMENT ON CONSTRAINT fk_staff_users ON staff IS '';
+
+ALTER TABLE trade_unit ADD CONSTRAINT fk_trade_unit_corporate FOREIGN KEY ( corporate_id ) REFERENCES corporate( id );
+
+COMMENT ON CONSTRAINT fk_trade_unit_corporate ON trade_unit IS '';
+
+ALTER TABLE trade_unit ADD CONSTRAINT fk_trade_unit_individual FOREIGN KEY ( individual_id ) REFERENCES individual( id );
+
+COMMENT ON CONSTRAINT fk_trade_unit_individual ON trade_unit IS '';
+
+]]></string>
+		</script>
+		<script name="Sql_007" id="Query_762cba0" language="SQL" >
+			<string><![CDATA[CREATE SCHEMA carlinkng;
+
+CREATE TABLE objects ( 
+	id                   serial  NOT NULL,
+	name                 varchar(100)  ,
+	CONSTRAINT pk_car PRIMARY KEY ( id )
+ );
+
+CREATE TABLE users ( 
+	id                   serial  NOT NULL,
+	login                varchar(50)  NOT NULL,
+	status               varchar(32) DEFAULT 'GUEST' ,
+	user_firstname       varchar  ,
+	user_lastname        varchar  ,
+	CONSTRAINT pk_users PRIMARY KEY ( id )
+ );
+
+CREATE TABLE auction ( 
+	id                   serial  NOT NULL,
+	object_id            integer  ,
+	CONSTRAINT pk_auction PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_auction ON auction ( object_id );
+
+CREATE TABLE corporate ( 
+	id                   integer  NOT NULL,
+	name                 varchar(255)  ,
+	admin_user_id        integer  ,
+	inn                  varchar  ,
+	ogrn                 varchar  ,
+	kpp                  varchar  ,
+	CONSTRAINT pk_corporate PRIMARY KEY ( id ),
+	CONSTRAINT pk_corporate_0 UNIQUE ( inn ) 
+ );
+
+CREATE INDEX idx_corporate ON corporate ( admin_user_id );
+
+COMMENT ON TABLE corporate IS 'Юр лицо';
+
+CREATE TABLE individual ( 
+	id                   serial  NOT NULL,
+	inn                  varchar  ,
+	user_id              integer  ,
+	CONSTRAINT pk_individual PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_individual ON individual ( user_id );
+
+CREATE TABLE trade_unit ( 
+	id                   serial  ,
+	corporate_id         integer  ,
+	individual_id        integer  ,
+	balanse_summ         numeric(10,2)  ,
+	CONSTRAINT pk_trade_unit UNIQUE ( id ) 
+ );
+
+CREATE INDEX idx_trade_unit ON trade_unit ( corporate_id );
+
+CREATE INDEX idx_trade_unit_0 ON trade_unit ( individual_id );
+
+COMMENT ON TABLE trade_unit IS 'Обобщенная сущность для юр и физ лиц
+Нужно ввести правило что (corporate_id != null and individual_id == null) or (corporate_id == null and individual_id != null)
+
+';
+
+CREATE TABLE profile ( 
+	id                   serial  NOT NULL,
+	name                 varchar  ,
+	is_active            varchar(1) DEFAULT 'N' ,
+	user_id              integer  NOT NULL,
+	trade_unit_id        integer  ,
+	CONSTRAINT pk_profile PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_profile ON profile ( user_id );
+
+CREATE INDEX idx_profile_0 ON profile ( trade_unit_id );
+
+COMMENT ON COLUMN profile.id IS 'Идентификатор';
+
+COMMENT ON COLUMN profile.is_active IS 'Признак того включен или выключен данный профиль.';
+
+CREATE TABLE auction_bid ( 
+	id                   serial  ,
+	summ                 numeric(10,2)  NOT NULL,
+	profile_id           serial  ,
+	auction_id           integer  ,
+	CONSTRAINT pk_bid UNIQUE ( id ) 
+ );
+
+CREATE INDEX idx_bid ON auction_bid ( profile_id );
+
+CREATE INDEX idx_bid_0 ON auction_bid ( auction_id );
+
+COMMENT ON TABLE auction_bid IS 'Ставки';
+
+COMMENT ON COLUMN auction_bid.summ IS 'Величина ставки';
+
+ALTER TABLE auction ADD CONSTRAINT fk_auction_car FOREIGN KEY ( object_id ) REFERENCES objects( id );
+
+COMMENT ON CONSTRAINT fk_auction_car ON auction IS '';
+
+ALTER TABLE auction_bid ADD CONSTRAINT fk_bid_profile FOREIGN KEY ( profile_id ) REFERENCES profile( id );
+
+COMMENT ON CONSTRAINT fk_bid_profile ON auction_bid IS '';
+
+ALTER TABLE auction_bid ADD CONSTRAINT fk_bid_auction FOREIGN KEY ( auction_id ) REFERENCES auction( id );
+
+COMMENT ON CONSTRAINT fk_bid_auction ON auction_bid IS '';
+
+ALTER TABLE corporate ADD CONSTRAINT fk_corporate FOREIGN KEY ( admin_user_id ) REFERENCES users( id );
+
+COMMENT ON CONSTRAINT fk_corporate ON corporate IS '';
+
+ALTER TABLE individual ADD CONSTRAINT fk_individual_users FOREIGN KEY ( user_id ) REFERENCES users( id );
+
+COMMENT ON CONSTRAINT fk_individual_users ON individual IS '';
+
+ALTER TABLE profile ADD CONSTRAINT fk_profile FOREIGN KEY ( user_id ) REFERENCES users( id ) ON DELETE CASCADE;
+
+COMMENT ON CONSTRAINT fk_profile ON profile IS '';
+
+ALTER TABLE profile ADD CONSTRAINT fk_profile_trade_unit FOREIGN KEY ( trade_unit_id ) REFERENCES trade_unit( id );
+
+COMMENT ON CONSTRAINT fk_profile_trade_unit ON profile IS '';
+
+ALTER TABLE trade_unit ADD CONSTRAINT fk_trade_unit_corporate FOREIGN KEY ( corporate_id ) REFERENCES corporate( id );
+
+COMMENT ON CONSTRAINT fk_trade_unit_corporate ON trade_unit IS '';
+
+ALTER TABLE trade_unit ADD CONSTRAINT fk_trade_unit_individual FOREIGN KEY ( individual_id ) REFERENCES individual( id );
+
+COMMENT ON CONSTRAINT fk_trade_unit_individual ON trade_unit IS '';
+
+]]></string>
+		</script>
+		<script name="Sql_008" id="Query_1c66e4f0" language="SQL" >
+			<string><![CDATA[--
+CREATE TABLE objects ( 
+	id                   serial  NOT NULL,
+	name                 varchar(100)  ,
+	CONSTRAINT pk_car PRIMARY KEY ( id )
+ );
+
+CREATE TABLE users ( 
+	id                   serial  NOT NULL,
+	login                varchar(50)  NOT NULL,
+	status               varchar(32) DEFAULT 'GUEST' ,
+	user_firstname       varchar  ,
+	user_lastname        varchar  ,
+	CONSTRAINT pk_users PRIMARY KEY ( id )
+ );
+
+CREATE TABLE auction ( 
+	id                   serial  NOT NULL,
+	object_id            integer  ,
+	CONSTRAINT pk_auction PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_auction ON auction ( object_id );
+
+CREATE TABLE corporate ( 
+	id                   serial  NOT NULL,
+	name                 varchar(255)  ,
+	admin_user_id        integer  ,
+	inn                  varchar  ,
+	ogrn                 varchar  ,
+	kpp                  varchar  ,
+	CONSTRAINT pk_corporate PRIMARY KEY ( id ),
+	CONSTRAINT pk_corporate_0 UNIQUE ( inn ) 
+ );
+
+CREATE INDEX idx_corporate ON corporate ( admin_user_id );
+
+COMMENT ON TABLE corporate IS 'Юр лицо';
+
+CREATE TABLE individual ( 
+	id                   serial  NOT NULL,
+	inn                  varchar  ,
+	user_id              integer  ,
+	CONSTRAINT pk_individual PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_individual ON individual ( user_id );
+
+CREATE TABLE trade_unit ( 
+	id                   serial  ,
+	corporate_id         integer  ,
+	individual_id        integer  ,
+	balanse_summ         numeric(10,2)  ,
+	CONSTRAINT pk_trade_unit UNIQUE ( id ) 
+ );
+
+CREATE INDEX idx_trade_unit ON trade_unit ( corporate_id );
+
+CREATE INDEX idx_trade_unit_0 ON trade_unit ( individual_id );
+
+COMMENT ON TABLE trade_unit IS 'Обобщенная сущность для юр и физ лиц
+Нужно ввести правило что (corporate_id != null and individual_id == null) or (corporate_id == null and individual_id != null)
+
+';
+
+CREATE TABLE profile ( 
+	id                   serial  NOT NULL,
+	name                 varchar  ,
+	is_active            varchar(1) DEFAULT 'N' ,
+	user_id              integer  NOT NULL,
+	trade_unit_id        integer  ,
+	CONSTRAINT pk_profile PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_profile ON profile ( user_id );
+
+CREATE INDEX idx_profile_0 ON profile ( trade_unit_id );
+
+COMMENT ON COLUMN profile.id IS 'Идентификатор';
+
+COMMENT ON COLUMN profile.is_active IS 'Признак того включен или выключен данный профиль.';
+
+CREATE TABLE auction_bid ( 
+	id                   serial  ,
+	summ                 numeric(10,2)  NOT NULL,
+	profile_id           serial  ,
+	auction_id           integer  ,
+	CONSTRAINT pk_bid UNIQUE ( id ) 
+ );
+
+CREATE INDEX idx_bid ON auction_bid ( profile_id );
+
+CREATE INDEX idx_bid_0 ON auction_bid ( auction_id );
+
+COMMENT ON TABLE auction_bid IS 'Ставки';
+
+COMMENT ON COLUMN auction_bid.summ IS 'Величина ставки';
+
+ALTER TABLE auction ADD CONSTRAINT fk_auction_car FOREIGN KEY ( object_id ) REFERENCES objects( id );
+
+COMMENT ON CONSTRAINT fk_auction_car ON auction IS '';
+
+ALTER TABLE auction_bid ADD CONSTRAINT fk_bid_profile FOREIGN KEY ( profile_id ) REFERENCES profile( id );
+
+COMMENT ON CONSTRAINT fk_bid_profile ON auction_bid IS '';
+
+ALTER TABLE auction_bid ADD CONSTRAINT fk_bid_auction FOREIGN KEY ( auction_id ) REFERENCES auction( id );
+
+COMMENT ON CONSTRAINT fk_bid_auction ON auction_bid IS '';
+
+ALTER TABLE corporate ADD CONSTRAINT fk_corporate FOREIGN KEY ( admin_user_id ) REFERENCES users( id );
+
+COMMENT ON CONSTRAINT fk_corporate ON corporate IS '';
+
+ALTER TABLE individual ADD CONSTRAINT fk_individual_users FOREIGN KEY ( user_id ) REFERENCES users( id );
+
+COMMENT ON CONSTRAINT fk_individual_users ON individual IS '';
+
+ALTER TABLE profile ADD CONSTRAINT fk_profile FOREIGN KEY ( user_id ) REFERENCES users( id ) ON DELETE CASCADE;
+
+COMMENT ON CONSTRAINT fk_profile ON profile IS '';
+
+ALTER TABLE profile ADD CONSTRAINT fk_profile_trade_unit FOREIGN KEY ( trade_unit_id ) REFERENCES trade_unit( id );
+
+COMMENT ON CONSTRAINT fk_profile_trade_unit ON profile IS '';
+
+ALTER TABLE trade_unit ADD CONSTRAINT fk_trade_unit_corporate FOREIGN KEY ( corporate_id ) REFERENCES corporate( id );
+
+COMMENT ON CONSTRAINT fk_trade_unit_corporate ON trade_unit IS '';
+
+ALTER TABLE trade_unit ADD CONSTRAINT fk_trade_unit_individual FOREIGN KEY ( individual_id ) REFERENCES individual( id );
+
+COMMENT ON CONSTRAINT fk_trade_unit_individual ON trade_unit IS '';
+
+]]></string>
+		</script>
+		<script name="Sql_009" id="Query_651fbe1" language="SQL" >
+			<string><![CDATA[CREATE SCHEMA carlinkng;
+
+CREATE TABLE corporate ( 
+	id                   serial  NOT NULL,
+	name                 varchar(255)  ,
+	inn                  varchar  ,
+	ogrn                 varchar  ,
+	kpp                  varchar  ,
+	CONSTRAINT pk_corporate PRIMARY KEY ( id ),
+	CONSTRAINT pk_corporate_0 UNIQUE ( inn ) 
+ );
+
+COMMENT ON TABLE corporate IS 'Юр лицо';
+
+CREATE TABLE individual ( 
+	id                   serial  NOT NULL,
+	inn                  varchar  ,
+	CONSTRAINT pk_individual PRIMARY KEY ( id )
+ );
+
+CREATE TABLE objects ( 
+	id                   serial  NOT NULL,
+	name                 varchar(100)  ,
+	CONSTRAINT pk_car PRIMARY KEY ( id )
+ );
+
+CREATE TABLE users ( 
+	id                   serial  NOT NULL,
+	login                varchar(50)  NOT NULL,
+	status               varchar(32) DEFAULT 'GUEST' ,
+	user_firstname       varchar  ,
+	user_lastname        varchar  ,
+	CONSTRAINT pk_users PRIMARY KEY ( id )
+ );
+
+CREATE TABLE auction ( 
+	id                   serial  NOT NULL,
+	object_id            integer  ,
+	CONSTRAINT pk_auction PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_auction ON auction ( object_id );
+
+CREATE TABLE trade_unit ( 
+	id                   serial  ,
+	corporate_id         integer  ,
+	individual_id        integer  ,
+	balance_summ         numeric(10,2)  ,
+	is_active            varchar(1) DEFAULT 'N' ,
+	admin_user_id        integer  ,
+	CONSTRAINT pk_trade_unit UNIQUE ( id ) 
+ );
+
+CREATE INDEX idx_trade_unit ON trade_unit ( corporate_id );
+
+CREATE INDEX idx_trade_unit_0 ON trade_unit ( individual_id );
+
+COMMENT ON TABLE trade_unit IS 'Обобщенная сущность для юр и физ лиц
+Нужно ввести правило что (corporate_id != null and individual_id == null) or (corporate_id == null and individual_id != null)
+
+';
+
+COMMENT ON COLUMN trade_unit.is_active IS 'Признак того включен или выключен данный профиль.';
+
+CREATE TABLE profile ( 
+	id                   serial  NOT NULL,
+	name                 varchar  ,
+	user_id              integer  NOT NULL,
+	trade_unit_id        integer  ,
+	is_active            varchar(1) DEFAULT 'N' ,
+	CONSTRAINT pk_profile PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_profile ON profile ( user_id );
+
+CREATE INDEX idx_profile_0 ON profile ( trade_unit_id );
+
+COMMENT ON COLUMN profile.id IS 'Идентификатор';
+
+COMMENT ON COLUMN profile.is_active IS 'Признак того включен или выключен данный профиль.';
+
+CREATE TABLE auction_bid ( 
+	id                   serial  ,
+	summ                 numeric(10,2)  NOT NULL,
+	profile_id           serial  ,
+	auction_id           integer  ,
+	CONSTRAINT pk_bid UNIQUE ( id ) 
+ );
+
+CREATE INDEX idx_bid ON auction_bid ( profile_id );
+
+CREATE INDEX idx_bid_0 ON auction_bid ( auction_id );
+
+COMMENT ON TABLE auction_bid IS 'Ставки';
+
+COMMENT ON COLUMN auction_bid.summ IS 'Величина ставки';
+
+ALTER TABLE auction ADD CONSTRAINT fk_auction_car FOREIGN KEY ( object_id ) REFERENCES objects( id );
+
+COMMENT ON CONSTRAINT fk_auction_car ON auction IS '';
+
+ALTER TABLE auction_bid ADD CONSTRAINT fk_bid_profile FOREIGN KEY ( profile_id ) REFERENCES profile( id );
+
+COMMENT ON CONSTRAINT fk_bid_profile ON auction_bid IS '';
+
+ALTER TABLE auction_bid ADD CONSTRAINT fk_bid_auction FOREIGN KEY ( auction_id ) REFERENCES auction( id );
+
+COMMENT ON CONSTRAINT fk_bid_auction ON auction_bid IS '';
+
+ALTER TABLE profile ADD CONSTRAINT fk_profile FOREIGN KEY ( user_id ) REFERENCES users( id ) ON DELETE CASCADE;
+
+COMMENT ON CONSTRAINT fk_profile ON profile IS '';
+
+ALTER TABLE profile ADD CONSTRAINT fk_profile_trade_unit FOREIGN KEY ( trade_unit_id ) REFERENCES trade_unit( id );
+
+COMMENT ON CONSTRAINT fk_profile_trade_unit ON profile IS '';
+
+ALTER TABLE trade_unit ADD CONSTRAINT fk_trade_unit_individual FOREIGN KEY ( individual_id ) REFERENCES individual( id );
+
+COMMENT ON CONSTRAINT fk_trade_unit_individual ON trade_unit IS '';
+
+ALTER TABLE trade_unit ADD CONSTRAINT fk_trade_unit_corporate FOREIGN KEY ( admin_user_id ) REFERENCES users( id );
+
+COMMENT ON CONSTRAINT fk_trade_unit_corporate ON trade_unit IS '';
+
+ALTER TABLE trade_unit ADD CONSTRAINT fk_trade_unit FOREIGN KEY ( corporate_id ) REFERENCES corporate( id );
+
+COMMENT ON CONSTRAINT fk_trade_unit ON trade_unit IS '';
+
+]]></string>
+		</script>
+		<script name="Sql_010" id="Query_1d42893d" language="SQL" >
+			<string><![CDATA[CREATE SCHEMA carlinkng;
+
+CREATE TABLE corporate ( 
+	id                   serial  NOT NULL,
+	name                 varchar(255)  ,
+	inn                  varchar  ,
+	ogrn                 varchar  ,
+	kpp                  varchar  ,
+	CONSTRAINT pk_corporate PRIMARY KEY ( id ),
+	CONSTRAINT pk_corporate_0 UNIQUE ( inn ) 
+ );
+
+COMMENT ON TABLE corporate IS 'Юр лицо';
+
+CREATE TABLE individual ( 
+	id                   serial  NOT NULL,
+	inn                  varchar  ,
+	CONSTRAINT pk_individual PRIMARY KEY ( id )
+ );
+
+CREATE TABLE objects ( 
+	id                   serial  NOT NULL,
+	name                 varchar(100)  ,
+	CONSTRAINT pk_car PRIMARY KEY ( id )
+ );
+
+CREATE TABLE users ( 
+	id                   serial  NOT NULL,
+	login                varchar(50)  NOT NULL,
+	status               varchar(32) DEFAULT 'GUEST' ,
+	user_firstname       varchar  ,
+	user_lastname        varchar  ,
+	CONSTRAINT pk_users PRIMARY KEY ( id )
+ );
+
+CREATE TABLE auction ( 
+	id                   serial  NOT NULL,
+	object_id            integer  ,
+	CONSTRAINT pk_auction PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_auction ON auction ( object_id );
+
+CREATE TABLE trade_unit ( 
+	id                   serial  ,
+	corporate_id         integer  ,
+	individual_id        integer  ,
+	balance_summ         numeric(10,2)  ,
+	is_active            varchar(1) DEFAULT 'N' ,
+	admin_user_id        integer  ,
+	CONSTRAINT pk_trade_unit UNIQUE ( id ) 
+ );
+
+CREATE INDEX idx_trade_unit ON trade_unit ( corporate_id );
+
+CREATE INDEX idx_trade_unit_0 ON trade_unit ( individual_id );
+
+COMMENT ON TABLE trade_unit IS 'Обобщенная сущность для юр и физ лиц
+Нужно ввести правило что (corporate_id != null and individual_id == null) or (corporate_id == null and individual_id != null)
+
+';
+
+COMMENT ON COLUMN trade_unit.is_active IS 'Признак того включен или выключен данный профиль.';
+
+CREATE TABLE profile ( 
+	id                   serial  NOT NULL,
+	name                 varchar  ,
+	user_id              integer  NOT NULL,
+	trade_unit_id        integer  ,
+	is_active            varchar(1) DEFAULT 'N' ,
+	CONSTRAINT pk_profile PRIMARY KEY ( id )
+ );
+
+CREATE INDEX idx_profile ON profile ( user_id );
+
+CREATE INDEX idx_profile_0 ON profile ( trade_unit_id );
+
+COMMENT ON COLUMN profile.id IS 'Идентификатор';
+
+COMMENT ON COLUMN profile.is_active IS 'Признак того включен или выключен данный профиль.';
+
+CREATE TABLE auction_bid ( 
+	id                   serial  ,
+	summ                 numeric(10,2)  NOT NULL,
+	profile_id           serial  ,
+	auction_id           integer  ,
+	CONSTRAINT pk_bid UNIQUE ( id ) 
+ );
+
+CREATE INDEX idx_bid ON auction_bid ( profile_id );
+
+CREATE INDEX idx_bid_0 ON auction_bid ( auction_id );
+
+COMMENT ON TABLE auction_bid IS 'Ставки';
+
+COMMENT ON COLUMN auction_bid.summ IS 'Величина ставки';
+
+ALTER TABLE auction ADD CONSTRAINT fk_auction_car FOREIGN KEY ( object_id ) REFERENCES objects( id );
+
+COMMENT ON CONSTRAINT fk_auction_car ON auction IS '';
+
+ALTER TABLE auction_bid ADD CONSTRAINT fk_bid_profile FOREIGN KEY ( profile_id ) REFERENCES profile( id );
+
+COMMENT ON CONSTRAINT fk_bid_profile ON auction_bid IS '';
+
+ALTER TABLE auction_bid ADD CONSTRAINT fk_bid_auction FOREIGN KEY ( auction_id ) REFERENCES auction( id );
+
+COMMENT ON CONSTRAINT fk_bid_auction ON auction_bid IS '';
+
+ALTER TABLE profile ADD CONSTRAINT fk_profile FOREIGN KEY ( user_id ) REFERENCES users( id ) ON DELETE CASCADE;
+
+COMMENT ON CONSTRAINT fk_profile ON profile IS '';
+
+ALTER TABLE profile ADD CONSTRAINT fk_profile_trade_unit FOREIGN KEY ( trade_unit_id ) REFERENCES trade_unit( id );
+
+COMMENT ON CONSTRAINT fk_profile_trade_unit ON profile IS '';
+
+ALTER TABLE trade_unit ADD CONSTRAINT fk_trade_unit_individual FOREIGN KEY ( individual_id ) REFERENCES individual( id );
+
+COMMENT ON CONSTRAINT fk_trade_unit_individual ON trade_unit IS '';
+
+ALTER TABLE trade_unit ADD CONSTRAINT fk_trade_unit_corporate FOREIGN KEY ( admin_user_id ) REFERENCES users( id );
+
+COMMENT ON CONSTRAINT fk_trade_unit_corporate ON trade_unit IS '';
+
+ALTER TABLE trade_unit ADD CONSTRAINT fk_trade_unit FOREIGN KEY ( corporate_id ) REFERENCES corporate( id );
+
+COMMENT ON CONSTRAINT fk_trade_unit ON trade_unit IS '';
+
+]]></string>
+		</script>
+		<script name="corporate_001" id="Query_d66cea6" language="SQL" >
+			<string><![CDATA[INSERT INTO carlinkng.corporate
+	( id, name, profile_id) VALUES ( ?, ?, ? );]]></string>
+		</script>
+		<script name="fk_profile_trade_unit" id="Query_2286ae99" language="SQL" >
+			<string><![CDATA[SELECT * 
+FROM
+	carlinkng.trade_unit t
+	INNER JOIN carlinkng.profile e ON ( e.trade_unit_id = t.id ) ;]]></string>
+		</script>
+		<script name="profile" id="Query_329389f4" language="SQL" >
+			<string><![CDATA[INSERT INTO carlinkng.profile
+	( id, name, is_active, user_id, trade_unit_id) VALUES ( ?, ?, ?, ?, ? );]]></string>
+		</script>
+		<script name="trade_unit" id="Query_e79bb35" language="SQL" >
+			<string><![CDATA[INSERT INTO carlinkng.trade_unit
+	( id, corporate_id, individual_id, balanse_summ) VALUES ( ?, ?, ?, ? );]]></string>
+		</script>
+		<script name="users" id="Query_2f59b42e" language="SQL" >
+			<string><![CDATA[INSERT INTO carlinkng.users
+	( user_id, login) VALUES ( 1, 'U1' );]]></string>
+		</script>
+		<script name="users_001" id="Query_31b40129" language="SQL" >
+			<string><![CDATA[INSERT INTO carlinkng.users
+	( user_id, login) VALUES ( ?, ? );]]></string>
+		</script>
+		<browser id="Browse_f0446f1" name="individual" confirm_updates="y" >
+			<browse_table schema="carlinkng" entity="individual" x="10" y="10" width="400" height="350" />
+		</browser>
+		<form name="corporate" form_id="corpora" id="Form_1900bdd6" template="Centered Page" view="frame" >
+			<var name="corporaPageNumber" type="4" value="0" mandatory="n" />
+			<var name="corporaRecordsPerPage" type="4" value="20" mandatory="n" />
+			<header name="Header" template="Navbar" place="0, 0, 0, 0, full, full" layout="{{-2.0,-2.0},{-2.0,-2.0}}" columnar="y" scroll="n" html="n" />
+			<body name="Body" template="Grid" title="corpora" css="grid" place="0, 0, 0, 0, full, full" layout="{{-2.0,-2.0,-2.0,-2.0,-2.0,-1.0},{-2.0,-2.0,-2.0,-2.0}}" columnar="y" scroll="n" html="n" >
+				<actor act="label" name="Page ${corporaPageNumber+1}" template="Plain" place="3, 3, 3, 3, left, center" />
+				<actor act="label" name="corporate" template="H3" place="1, 1, 2, 1, left, center" />
+				<actor act="href" name="" template="Plain" disabled="${!corporaHasNextPage}" place="4, 3, 4, 3, left, center" icon="intern/browse_next.png" ref_id="Form_1900bdd6" >
+					<var name="corporaPageNumber" value="${( corporaPageNumber+1 )}" />
+				</actor>
+				<actor act="href" name="" template="Plain" disabled="${corporaPageNumber&lt;1}" place="2, 3, 2, 3, left, center" icon="intern/browse_previous.png" ref_id="Form_1900bdd6" >
+					<var name="corporaPageNumber" value="${Math.max(0,corporaPageNumber-1)}" />
+				</actor>
+				<actor act="href" name="" template="Plain" disabled="${corporaPageNumber&lt;1}" place="1, 3, 1, 3, left, center" icon="intern/browse_first.png" ref_id="Form_1900bdd6" >
+					<var name="corporaPageNumber" value="0" />
+				</actor>
+				<panel name="corpora" template="Table" css="table table-striped table-bordered table-condensed table-hover" place="1, 2, 5, 2, full, full" layout="{{-2.0,-2.0,-2.0,-2.0},{-2.0,-2.0,-2.0}}" columnar="n" scroll="n" html="n" header_rows="1" >
+					<form_script type="DataSource" language="SQL" >
+						<var name="id" type="4" value="0" />
+						<var name="name" type="-1" value="Abel Warren" />
+						<var name="profile_id" type="4" value="29" />
+						<script ><![CDATA[SELECT c1.id, c1.name, c1.profile_id
+FROM carlinkng.corporate c1 
+	INNER JOIN carlinkng.profile p ON ( c1.profile_id = p.id  )]]></script>
+					</form_script>
+					<actor act="label" name="${id}" template="Plain" place="1, 2, 1, 2, left, center" />
+					<actor act="label" name="${name}" template="Plain" place="2, 2, 2, 2, left, center" />
+					<actor act="label" name="${profile_id}" template="Plain" place="3, 2, 3, 2, left, center" />
+					<actor act="label" name="Id" template="Plain" place="1, 1, 1, 1, center, center" />
+					<actor act="label" name="Name" template="Plain" place="2, 1, 2, 1, center, center" />
+					<actor act="label" name="Profile_id" template="Plain" place="3, 1, 3, 1, center, center" />
+				</panel>
+			</body>
+		</form>
+		<form name="qb_erv" form_id="qb_erv" id="Form_d090744" template="Centered Page" view="frame" >
+			<var name="qb_ervPageNumber" type="4" value="0" mandatory="n" />
+			<var name="qb_ervRecordsPerPage" type="4" value="20" mandatory="n" />
+			<header name="Header" template="Navbar" place="0, 0, 0, 0, full, full" layout="{{-2.0,-2.0},{-2.0,-2.0}}" columnar="y" scroll="n" html="n" />
+			<body name="Body" template="Grid" title="qb_erv" css="grid" place="0, 0, 0, 0, full, full" layout="{{-2.0,-2.0,-2.0,-2.0,-2.0,-1.0},{-2.0,-2.0,-2.0,-2.0}}" columnar="y" scroll="n" html="n" >
+				<actor act="label" name="Page ${qb_ervPageNumber+1}" template="Plain" place="3, 3, 3, 3, left, center" />
+				<actor act="label" name="qb_erv" template="H3" place="1, 1, 2, 1, left, center" />
+				<actor act="href" name="" template="Plain" disabled="${!qb_ervHasNextPage}" place="4, 3, 4, 3, left, center" icon="intern/browse_next.png" ref_id="Form_d090744" >
+					<var name="qb_ervPageNumber" value="${( qb_ervPageNumber+1 )}" />
+				</actor>
+				<actor act="href" name="" template="Plain" disabled="${qb_ervPageNumber&lt;1}" place="2, 3, 2, 3, left, center" icon="intern/browse_previous.png" ref_id="Form_d090744" >
+					<var name="qb_ervPageNumber" value="${Math.max(0,qb_ervPageNumber-1)}" />
+				</actor>
+				<actor act="href" name="" template="Plain" disabled="${qb_ervPageNumber&lt;1}" place="1, 3, 1, 3, left, center" icon="intern/browse_first.png" ref_id="Form_d090744" >
+					<var name="qb_ervPageNumber" value="0" />
+				</actor>
+				<panel name="qb_erv" template="Grid" place="1, 2, 5, 2, full, full" layout="{{-2.0,-2.0},{-2.0,-2.0}}" columnar="n" scroll="n" html="n" />
+			</body>
+		</form>
+		<form name="user" form_id="user" id="Form_1dcc4816" template="Centered Page" view="frame" >
+			<var name="userPageNumber" type="4" value="0" mandatory="n" />
+			<var name="userRecordsPerPage" type="4" value="20" mandatory="n" />
+			<header name="Header" template="Navbar" place="0, 0, 0, 0, full, full" layout="{{-2.0,-2.0},{-2.0,-2.0}}" columnar="y" scroll="n" html="n" />
+			<body name="Body" template="Grid" title="user" css="grid" place="0, 0, 0, 0, full, full" layout="{{-2.0,-2.0,-2.0,-2.0,-2.0,-1.0},{-2.0,-2.0,-2.0,-2.0}}" columnar="y" scroll="n" html="n" >
+				<actor act="label" name="Page ${userPageNumber+1}" template="Plain" place="3, 3, 3, 3, left, center" />
+				<actor act="label" name="user" template="H3" place="1, 1, 2, 1, left, center" />
+				<actor act="href" name="" template="Plain" disabled="${!userHasNextPage}" place="4, 3, 4, 3, left, center" icon="intern/browse_next.png" ref_id="Form_1dcc4816" >
+					<var name="userPageNumber" value="${( userPageNumber+1 )}" />
+				</actor>
+				<actor act="href" name="" template="Plain" disabled="${userPageNumber&lt;1}" place="2, 3, 2, 3, left, center" icon="intern/browse_previous.png" ref_id="Form_1dcc4816" >
+					<var name="userPageNumber" value="${Math.max(0,userPageNumber-1)}" />
+				</actor>
+				<actor act="href" name="" template="Plain" disabled="${userPageNumber&lt;1}" place="1, 3, 1, 3, left, center" icon="intern/browse_first.png" ref_id="Form_1dcc4816" >
+					<var name="userPageNumber" value="0" />
+				</actor>
+				<panel name="user" template="Table" css="table table-striped table-bordered table-condensed table-hover" place="1, 2, 5, 2, full, full" layout="{{-2.0,-2.0,-2.0},{-2.0,-2.0,-2.0}}" columnar="n" scroll="n" html="n" header_rows="1" >
+					<form_script type="DataSource" language="SQL" >
+						<var name="user_id" type="4" />
+						<var name="login" type="-1" />
+						<script ><![CDATA[SELECT u.user_id, u.login
+FROM carlinkng.users u]]></script>
+					</form_script>
+					<actor act="label" name="${login}" template="Plain" place="2, 2, 2, 2, left, center" />
+					<actor act="label" name="${user_id}" template="Plain" place="1, 2, 1, 2, left, center" />
+					<actor act="label" name="Login" template="Plain" place="2, 1, 2, 1, center, center" />
+					<actor act="label" name="User_id" template="Plain" place="1, 1, 1, 1, center, center" />
+				</panel>
+			</body>
+		</form>
+		<form name="user_sql" form_id="user_sql" id="Form_f15ebf6" template="Centered Page" view="frame" >
+			<var name="user_sqlPageNumber" type="4" value="0" mandatory="n" />
+			<var name="user_sqlRecordsPerPage" type="4" value="20" mandatory="n" />
+			<header name="Header" template="Navbar" place="0, 0, 0, 0, full, full" layout="{{-2.0,-2.0},{-2.0,-2.0}}" columnar="y" scroll="n" html="n" />
+			<body name="Body" template="Grid" title="user_sql" css="grid" place="0, 0, 0, 0, full, full" layout="{{-2.0,-2.0,-2.0,-2.0,-2.0,-1.0},{-2.0,-2.0,-2.0,-2.0}}" columnar="y" scroll="n" html="n" >
+				<actor act="label" name="Page ${user_sqlPageNumber+1}" template="Plain" place="3, 3, 3, 3, left, center" />
+				<actor act="label" name="user_sql" template="H3" place="1, 1, 2, 1, left, center" />
+				<actor act="href" name="" template="Plain" disabled="${!user_sqlHasNextPage}" place="4, 3, 4, 3, left, center" icon="intern/browse_next.png" ref_id="Form_f15ebf6" >
+					<var name="user_sqlPageNumber" value="${( user_sqlPageNumber+1 )}" />
+				</actor>
+				<actor act="href" name="" template="Plain" disabled="${user_sqlPageNumber&lt;1}" place="2, 3, 2, 3, left, center" icon="intern/browse_previous.png" ref_id="Form_f15ebf6" >
+					<var name="user_sqlPageNumber" value="${Math.max(0,user_sqlPageNumber-1)}" />
+				</actor>
+				<actor act="href" name="" template="Plain" disabled="${user_sqlPageNumber&lt;1}" place="1, 3, 1, 3, left, center" icon="intern/browse_first.png" ref_id="Form_f15ebf6" >
+					<var name="user_sqlPageNumber" value="0" />
+				</actor>
+				<panel name="user_sql" template="Grid" place="1, 2, 5, 2, full, full" layout="{{-2.0,-2.0},{-2.0,-2.0}}" columnar="n" scroll="n" html="n" />
+			</body>
+		</form>
+	</layout>
+</project>

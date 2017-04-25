@@ -1,0 +1,1696 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="old_carlink" id="Project_3a25bd23" template="Default" database="MySql" >
+	<schema name="old_calink24" catalogname="old_calink24" >
+		<table name="auction" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="platform_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="user_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="obj_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="type_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="start_date" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="end_date" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="auction_type" type="int" length="10" decimal="0" jt="4" />
+			<column name="buy_now" type="int" length="10" decimal="0" jt="4" />
+			<column name="min_price" type="int" length="10" decimal="0" jt="4" />
+			<column name="start_price" type="int" length="10" decimal="0" jt="4" />
+			<column name="step" type="int" length="10" decimal="0" jt="4" />
+			<column name="sell_condition" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="contact_name" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="contact_email" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="contact_phone" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="status" type="int" length="10" decimal="0" jt="4" />
+			<column name="end_at" type="int" length="10" decimal="0" jt="4" />
+			<column name="created_at" type="int" length="10" decimal="0" jt="4" />
+			<column name="updated_at" type="int" length="10" decimal="0" jt="4" />
+			<column name="winner_id" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_auction" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="auction_bids" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="auction_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="user_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="value" type="int" length="10" decimal="0" jt="4" />
+			<column name="type_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="created_at" type="int" length="10" decimal="0" jt="4" />
+			<column name="status" type="int" length="10" decimal="0" jt="4" />
+			<column name="blocked_sum" type="int" length="10" decimal="0" jt="4" />
+			<column name="platform_id" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_auction_bids" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="auction_bids-auction_id" unique="NORMAL" >
+				<column name="auction_id" />
+			</index>
+			<index name="auction_bids-user_id" unique="NORMAL" >
+				<column name="user_id" />
+			</index>
+			<fk name="auction_bids-auction_id" to_schema="old_calink24" to_table="auction" delete_action="cascade" >
+				<fk_column name="auction_id" pk="id" />
+			</fk>
+			<fk name="auction_bids-user_id" to_schema="old_calink24" to_table="user" delete_action="cascade" >
+				<fk_column name="user_id" pk="id" />
+			</fk>
+		</table>
+		<table name="auth_assignment" >
+			<column name="item_name" type="varchar" length="64" decimal="0" jt="12" mandatory="y" />
+			<column name="user_id" type="varchar" length="64" decimal="0" jt="12" mandatory="y" />
+			<column name="created_at" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_auth_assignment" unique="PRIMARY_KEY" >
+				<column name="item_name" />
+				<column name="user_id" />
+			</index>
+			<fk name="auth_assignment_ibfk_1" to_schema="old_calink24" to_table="auth_item" delete_action="cascade" update_action="cascade" >
+				<fk_column name="item_name" pk="name" />
+			</fk>
+		</table>
+		<table name="auth_item" >
+			<column name="name" type="varchar" length="64" decimal="0" jt="12" mandatory="y" />
+			<column name="type" type="int" length="10" decimal="0" jt="4" mandatory="y" />
+			<column name="description" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="rule_name" type="varchar" length="64" decimal="0" jt="12" />
+			<column name="data" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="created_at" type="int" length="10" decimal="0" jt="4" />
+			<column name="updated_at" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_auth_item" unique="PRIMARY_KEY" >
+				<column name="name" />
+			</index>
+			<index name="idx-auth_item-type" unique="NORMAL" >
+				<column name="type" />
+			</index>
+			<index name="rule_name" unique="NORMAL" >
+				<column name="rule_name" />
+			</index>
+			<fk name="auth_item_ibfk_1" to_schema="old_calink24" to_table="auth_rule" delete_action="setNull" update_action="cascade" >
+				<fk_column name="rule_name" pk="name" />
+			</fk>
+		</table>
+		<table name="auth_item_child" >
+			<column name="parent" type="varchar" length="64" decimal="0" jt="12" mandatory="y" />
+			<column name="child" type="varchar" length="64" decimal="0" jt="12" mandatory="y" />
+			<index name="pk_auth_item_child" unique="PRIMARY_KEY" >
+				<column name="parent" />
+				<column name="child" />
+			</index>
+			<index name="child" unique="NORMAL" >
+				<column name="child" />
+			</index>
+			<fk name="auth_item_child_ibfk_1" to_schema="old_calink24" to_table="auth_item" delete_action="cascade" update_action="cascade" >
+				<fk_column name="parent" pk="name" />
+			</fk>
+			<fk name="auth_item_child_ibfk_2" to_schema="old_calink24" to_table="auth_item" delete_action="cascade" update_action="cascade" >
+				<fk_column name="child" pk="name" />
+			</fk>
+		</table>
+		<table name="auth_rule" >
+			<column name="name" type="varchar" length="64" decimal="0" jt="12" mandatory="y" />
+			<column name="data" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="created_at" type="int" length="10" decimal="0" jt="4" />
+			<column name="updated_at" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_auth_rule" unique="PRIMARY_KEY" >
+				<column name="name" />
+			</index>
+		</table>
+		<table name="balance_operation" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="platform_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="operation_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="zone_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="user_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="sum" type="decimal" length="50" decimal="2" jt="3" />
+			<column name="created_at" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_balance_operation" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="fk-balance_operation-user_id" unique="NORMAL" >
+				<column name="user_id" />
+			</index>
+			<fk name="fk-balance_operation-user_id" to_schema="old_calink24" to_table="user" delete_action="cascade" >
+				<fk_column name="user_id" pk="id" />
+			</fk>
+		</table>
+		<table name="car" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="platform_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="user_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="town_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="watch_place" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="mark_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="model_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="serie_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="equipment_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="year" type="int" length="10" decimal="0" jt="4" />
+			<column name="generation_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="modification_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="body_color" type="int" length="10" decimal="0" jt="4" />
+			<column name="is_body_in_stickers" type="int" length="10" decimal="0" jt="4" />
+			<column name="mileage" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="is_crash" type="int" length="10" decimal="0" jt="4" />
+			<column name="has_second_rubber_kit" type="int" length="10" decimal="0" jt="4" />
+			<column name="number_of_keys" type="int" length="10" decimal="0" jt="4" />
+			<column name="data_maintenance" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="has_service_book" type="int" length="10" decimal="0" jt="4" />
+			<column name="is_vehicle_warranty" type="int" length="10" decimal="0" jt="4" />
+			<column name="masters_in_PTSD" type="int" length="10" decimal="0" jt="4" />
+			<column name="PTSD" type="int" length="10" decimal="0" jt="4" />
+			<column name="register_number" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="VIN" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="TC_number" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="has_TC" type="int" length="10" decimal="0" jt="4" />
+			<column name="has_restrictions" type="int" length="10" decimal="0" jt="4" />
+			<column name="vehicle_owner" type="int" length="10" decimal="0" jt="4" />
+			<column name="payment_form" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="created_at" type="int" length="10" decimal="0" jt="4" />
+			<column name="updated_at" type="int" length="10" decimal="0" jt="4" />
+			<column name="status" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_car" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="car-generation_id" unique="NORMAL" >
+				<column name="generation_id" />
+			</index>
+			<index name="car-mark_id" unique="NORMAL" >
+				<column name="mark_id" />
+			</index>
+			<index name="car-model_id" unique="NORMAL" >
+				<column name="model_id" />
+			</index>
+			<index name="car-modification_id" unique="NORMAL" >
+				<column name="modification_id" />
+			</index>
+			<index name="car-platform_id" unique="NORMAL" >
+				<column name="platform_id" />
+			</index>
+			<index name="car-user_id" unique="NORMAL" >
+				<column name="user_id" />
+			</index>
+			<fk name="car-generation_id" to_schema="old_calink24" to_table="car_generation" delete_action="cascade" >
+				<fk_column name="generation_id" pk="id" />
+			</fk>
+			<fk name="car-mark_id" to_schema="old_calink24" to_table="car_mark" delete_action="cascade" >
+				<fk_column name="mark_id" pk="id" />
+			</fk>
+			<fk name="car-model_id" to_schema="old_calink24" to_table="car_model" delete_action="cascade" >
+				<fk_column name="model_id" pk="id" />
+			</fk>
+			<fk name="car-modification_id" to_schema="old_calink24" to_table="car_modification" delete_action="cascade" >
+				<fk_column name="modification_id" pk="id" />
+			</fk>
+			<fk name="car-platform_id" to_schema="old_calink24" to_table="platform" delete_action="cascade" >
+				<fk_column name="platform_id" pk="id" />
+			</fk>
+			<fk name="car-user_id" to_schema="old_calink24" to_table="user" delete_action="cascade" >
+				<fk_column name="user_id" pk="id" />
+			</fk>
+		</table>
+		<table name="car_document" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="car_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="type" type="int" length="10" decimal="0" jt="4" />
+			<column name="extension" type="varchar" length="11" decimal="0" jt="12" />
+			<column name="filePath" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="created_at" type="int" length="10" decimal="0" jt="4" />
+			<column name="updated_at" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_car_document" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="car_document-car_id" unique="NORMAL" >
+				<column name="car_id" />
+			</index>
+			<fk name="car_document-car_id" to_schema="old_calink24" to_table="car" delete_action="cascade" >
+				<fk_column name="car_id" pk="id" />
+			</fk>
+		</table>
+		<table name="car_generation" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="name" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
+			<column name="id_car_model" type="int" length="10" decimal="0" jt="4" mandatory="y" />
+			<column name="year_begin" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="year_end" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="date_create" type="int" length="10" decimal="0" jt="4" mandatory="y" unsigned="y" />
+			<column name="date_update" type="int" length="10" decimal="0" jt="4" unsigned="y" />
+			<column name="id_object_type" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<index name="pk_car_generation" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="id_car_model" unique="NORMAL" >
+				<column name="id_car_model" />
+			</index>
+			<index name="id_car_type" unique="NORMAL" >
+				<column name="id_object_type" />
+			</index>
+		</table>
+		<table name="car_image" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="car_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="imagePath" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="thumbPath" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="is_main" type="int" length="10" decimal="0" jt="4" />
+			<column name="extension" type="varchar" length="255" decimal="0" jt="12" />
+			<index name="pk_car_image" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="car_image-car_id" unique="NORMAL" >
+				<column name="car_id" />
+			</index>
+			<fk name="car_image-car_id" to_schema="old_calink24" to_table="car" delete_action="cascade" >
+				<fk_column name="car_id" pk="id" />
+			</fk>
+		</table>
+		<table name="car_mark" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" >
+				<comment><![CDATA[ID]]></comment>
+			</column>
+			<column name="name" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
+			<column name="date_create" type="int" length="10" decimal="0" jt="4" unsigned="y" />
+			<column name="date_update" type="int" length="10" decimal="0" jt="4" unsigned="y" />
+			<column name="id_object_type" type="int" length="10" decimal="0" jt="4" mandatory="y" />
+			<column name="name_rus" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="is_popular" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_car_mark" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="car_model" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" >
+				<comment><![CDATA[ID]]></comment>
+			</column>
+			<column name="id_car_mark" type="int" length="10" decimal="0" jt="4" mandatory="y" />
+			<column name="name" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
+			<column name="date_create" type="int" length="10" decimal="0" jt="4" unsigned="y" />
+			<column name="date_update" type="int" length="10" decimal="0" jt="4" unsigned="y" />
+			<column name="id_object_type" type="int" length="10" decimal="0" jt="4" mandatory="y" />
+			<column name="name_rus" type="varchar" length="255" decimal="0" jt="12" />
+			<index name="pk_car_model" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="id_car_mark" unique="NORMAL" >
+				<column name="id_car_mark" />
+			</index>
+			<index name="id_car_type" unique="NORMAL" >
+				<column name="id_object_type" />
+			</index>
+			<index name="name" unique="NORMAL" >
+				<column name="name" />
+			</index>
+		</table>
+		<table name="car_modification" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" >
+				<comment><![CDATA[ID]]></comment>
+			</column>
+			<column name="id_car_serie" type="int" length="10" decimal="0" jt="4" mandatory="y" />
+			<column name="id_car_model" type="int" length="10" decimal="0" jt="4" mandatory="y" />
+			<column name="name" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
+			<column name="date_create" type="int" length="10" decimal="0" jt="4" unsigned="y" />
+			<column name="date_update" type="int" length="10" decimal="0" jt="4" unsigned="y" />
+			<column name="id_object_type" type="int" length="10" decimal="0" jt="4" mandatory="y" />
+			<index name="pk_car_modification" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="id_car_model" unique="NORMAL" >
+				<column name="id_car_model" />
+			</index>
+			<index name="id_car_serie" unique="NORMAL" >
+				<column name="id_car_serie" />
+			</index>
+			<index name="id_car_type" unique="NORMAL" >
+				<column name="id_object_type" />
+			</index>
+		</table>
+		<table name="car_option" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="title" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="group_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="type" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="is_base" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_car_option" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="car_option_group" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="title" type="varchar" length="255" decimal="0" jt="12" />
+			<index name="pk_car_option_group" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="car_option_value" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="option_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="value" type="varchar" length="255" decimal="0" jt="12" />
+			<index name="pk_car_option_value" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="car_serie" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" >
+				<comment><![CDATA[ID]]></comment>
+			</column>
+			<column name="id_car_model" type="int" length="10" decimal="0" jt="4" mandatory="y" />
+			<column name="name" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
+			<column name="date_create" type="int" length="10" decimal="0" jt="4" unsigned="y" />
+			<column name="date_update" type="int" length="10" decimal="0" jt="4" unsigned="y" />
+			<column name="id_car_generation" type="int" length="10" decimal="0" jt="4" />
+			<column name="id_object_type" type="int" length="10" decimal="0" jt="4" mandatory="y" />
+			<index name="pk_car_serie" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="id_car_model" unique="NORMAL" >
+				<column name="id_car_model" />
+			</index>
+			<index name="id_car_type" unique="NORMAL" >
+				<column name="id_object_type" />
+			</index>
+			<index name="name" unique="NORMAL" >
+				<column name="name" />
+			</index>
+		</table>
+		<table name="cars_options" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="car_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="option_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="option_value_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="option_group_id" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_cars_options" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="cars_options-car_id" unique="NORMAL" >
+				<column name="car_id" />
+			</index>
+			<fk name="cars_options-car_id" to_schema="old_calink24" to_table="car" delete_action="cascade" >
+				<fk_column name="car_id" pk="id" />
+			</fk>
+		</table>
+		<table name="catalog" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="platform_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="user_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="obj_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="type_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="price" type="decimal" length="50" decimal="2" jt="3" />
+			<column name="contact_name" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="contact_email" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="contact_phone" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="status" type="int" length="10" decimal="0" jt="4" />
+			<column name="created_at" type="int" length="10" decimal="0" jt="4" />
+			<column name="updated_at" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_catalog" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="catalog-obj_id" unique="NORMAL" >
+				<column name="obj_id" />
+			</index>
+		</table>
+		<table name="company" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="owner_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="platform_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="name" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="OPF" type="int" length="10" decimal="0" jt="4" />
+			<column name="INN" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="KPP" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="OKPO" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="OKATO" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="country_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="region_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="town_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="index" type="varchar" length="100" decimal="0" jt="12" />
+			<column name="street" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="office" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="phone" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="director" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="buh" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="buh_email" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="site" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="bank_name" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="BIK" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="bank_town" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="RS_number" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="KOR_number" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="is_main" type="int" length="10" decimal="0" jt="4" mandatory="y" />
+			<index name="pk_company" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="fk-company-owner_id" unique="NORMAL" >
+				<column name="owner_id" />
+			</index>
+			<index name="fk-company-platform_id" unique="NORMAL" >
+				<column name="platform_id" />
+			</index>
+			<fk name="fk-company-platform_id" to_schema="old_calink24" to_table="platform" delete_action="cascade" >
+				<fk_column name="platform_id" pk="id" />
+			</fk>
+			<fk name="fk-company-owner_id" to_schema="old_calink24" to_table="user" delete_action="cascade" >
+				<fk_column name="owner_id" pk="id" />
+			</fk>
+		</table>
+		<table name="company_uploads" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="company_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="title" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="file_path" type="varchar" length="255" decimal="0" jt="12" />
+			<index name="pk_company_uploads" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="fk-company_uploads-company_id" unique="NORMAL" >
+				<column name="company_id" />
+			</index>
+		</table>
+		<table name="country" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="title" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="sorting" type="int" length="10" decimal="0" jt="4" />
+			<column name="country_code" type="varchar" length="15" decimal="0" jt="12" />
+			<column name="currency_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="alias" type="varchar" length="255" decimal="0" jt="12" />
+			<index name="pk_country" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="currency" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="title" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="iso" type="varchar" length="10" decimal="0" jt="12" />
+			<column name="symbol" type="varchar" length="10" decimal="0" jt="12" />
+			<column name="rate" type="float" length="12" decimal="0" jt="7" />
+			<index name="pk_currency" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="dictionary" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="title" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="model" type="varchar" length="255" decimal="0" jt="12" />
+			<index name="pk_dictionary" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="functional" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="title" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="description" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="module_id" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="status" type="int" length="10" decimal="0" jt="4" />
+			<column name="price" type="int" length="10" decimal="0" jt="4" />
+			<column name="monthPrice" type="int" length="10" decimal="0" jt="4" />
+			<column name="division" type="int" length="10" decimal="0" jt="4" />
+			<column name="submenu" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="account_submenu" type="text" length="65535" decimal="0" jt="-1" mandatory="y" />
+			<column name="menu_icon" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="zone" type="int" length="10" decimal="0" jt="4" />
+			<column name="permission_name" type="varchar" length="255" decimal="0" jt="12" />
+			<index name="pk_functional" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="functional_objects_types" >
+			<column name="func_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="obj_type_id" type="int" length="10" decimal="0" jt="4" />
+			<index name="fk-functional_objects_types-func_id" unique="NORMAL" >
+				<column name="func_id" />
+			</index>
+			<index name="fk-functional_objects_types-obj_type_id" unique="NORMAL" >
+				<column name="obj_type_id" />
+			</index>
+		</table>
+		<table name="language" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="url" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="local" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="name" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="default" type="smallint" length="5" decimal="0" jt="5" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<column name="created_at" type="int" length="10" decimal="0" jt="4" mandatory="y" />
+			<column name="updated_at" type="int" length="10" decimal="0" jt="4" mandatory="y" />
+			<column name="platform_id" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_language" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="menu" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="name" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="platform_id" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_menu" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="menu_item" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="menu_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="parent_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="url" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="class" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="status" type="int" length="10" decimal="0" jt="4" />
+			<column name="position" type="int" length="10" decimal="0" jt="4" />
+			<column name="active" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="platform_id" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_menu_item" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="menu_item_translate" >
+			<column name="item_id" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<column name="local" type="varchar" length="16" decimal="0" jt="12" mandatory="y" >
+				<defo>&#039;&#039;</defo>
+			</column>
+			<column name="name" type="varchar" length="255" decimal="0" jt="12" />
+			<index name="pk_menu_item_translate" unique="PRIMARY_KEY" >
+				<column name="item_id" />
+				<column name="local" />
+			</index>
+		</table>
+		<table name="migration" >
+			<column name="version" type="varchar" length="180" decimal="0" jt="12" mandatory="y" />
+			<column name="apply_time" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_migration" unique="PRIMARY_KEY" >
+				<column name="version" />
+			</index>
+		</table>
+		<table name="modules" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="name" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="status" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_modules" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="objects_types" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="status" type="int" length="10" decimal="0" jt="4" />
+			<column name="created_at" type="int" length="10" decimal="0" jt="4" />
+			<column name="controller_type" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="auction_commission_percent" type="int" length="10" decimal="0" jt="4" />
+			<column name="auction_commission_sum" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_objects_types" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="objects_types_translate" >
+			<column name="obj_type_id" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<column name="local" type="varchar" length="16" decimal="0" jt="12" mandatory="y" >
+				<defo>&#039;&#039;</defo>
+			</column>
+			<column name="title" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="short_title" type="varchar" length="100" decimal="0" jt="12" />
+			<index name="pk_objects_types_translate" unique="PRIMARY_KEY" >
+				<column name="obj_type_id" />
+				<column name="local" />
+			</index>
+		</table>
+		<table name="page" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="category_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="url" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="status" type="varchar" length="255" decimal="0" jt="12" >
+				<defo>&#039;&#039;</defo>
+			</column>
+			<column name="layout" type="varchar" length="255" decimal="0" jt="12" >
+				<defo>&#039;&#039;</defo>
+			</column>
+			<column name="view" type="varchar" length="255" decimal="0" jt="12" >
+				<defo>&#039;&#039;</defo>
+			</column>
+			<column name="created_at" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="updated_at" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="platform_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="country_id" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_page" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="category_id" unique="NORMAL" >
+				<column name="category_id" />
+			</index>
+			<index name="status" unique="NORMAL" >
+				<column name="status" />
+			</index>
+		</table>
+		<table name="page_category" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="parent_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="url" type="varchar" length="255" decimal="0" jt="12" >
+				<defo>&#039;&#039;</defo>
+			</column>
+			<column name="title" type="varchar" length="255" decimal="0" jt="12" >
+				<defo>&#039;&#039;</defo>
+			</column>
+			<column name="description" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="meta_title" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="meta_keywords" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="meta_description" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="full_url" type="varchar" length="255" decimal="0" jt="12" >
+				<defo>&#039;&#039;</defo>
+			</column>
+			<column name="layout" type="varchar" length="255" decimal="0" jt="12" >
+				<defo>&#039;&#039;</defo>
+			</column>
+			<column name="view" type="varchar" length="255" decimal="0" jt="12" >
+				<defo>&#039;&#039;</defo>
+			</column>
+			<column name="created_at" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="updated_at" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="page_size" type="smallint" length="5" decimal="0" jt="5" />
+			<index name="pk_page_category" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="created" unique="NORMAL" >
+				<column name="created_at" />
+			</index>
+			<index name="parent_id" unique="NORMAL" >
+				<column name="parent_id" />
+			</index>
+			<index name="updated" unique="NORMAL" >
+				<column name="updated_at" />
+			</index>
+			<index name="url" unique="NORMAL" >
+				<column name="url" />
+			</index>
+		</table>
+		<table name="page_translate" >
+			<column name="page_id" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<column name="local" type="varchar" length="16" decimal="0" jt="12" mandatory="y" >
+				<defo>&#039;&#039;</defo>
+			</column>
+			<column name="title" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="h1" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="short_description" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="full_description" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="meta_title" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="meta_keywords" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="meta_description" type="text" length="65535" decimal="0" jt="-1" />
+			<index name="pk_page_translate" unique="PRIMARY_KEY" >
+				<column name="page_id" />
+				<column name="local" />
+			</index>
+		</table>
+		<table name="penalization_list" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="sts" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="gosnomer" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="created_at" type="int" length="10" decimal="0" jt="4" />
+			<column name="updated_at" type="int" length="10" decimal="0" jt="4" />
+			<column name="user_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="platform_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="external_id" type="varchar" length="255" decimal="0" jt="12" />
+			<index name="pk_penalization_list" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="penalization_request" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="platform_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="platform_domain" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="export_file" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="import_file" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="time" type="varchar" length="255" decimal="0" jt="12" />
+			<index name="pk_penalization_request" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="penalization_response" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="platform_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="regnomer" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="sts" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="priznak_anul" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="kvitanc" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="data_nachis" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="uin" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="summa_shtrafa" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="summa_oplati" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="razmer_skidki" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="srok_skidki" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="naznachenie_platezha" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="nalogovii_period" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="nomer_nal_doc" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="data_nal_doc" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="status_sostavitelya" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="osnovanie_platezha" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="KBK" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="OKTMO" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="poluchatel" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="nomer_scheta_poluchatel" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="BIK_banka_poluchatel" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="INN_poluchatel" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="KPP_poluchatel" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="mesto_narushen" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="statya" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="data_postanov" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="created_at" type="int" length="10" decimal="0" jt="4" />
+			<column name="updated_at" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_penalization_response" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="platform" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="domain" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="subDomain" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="title" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="meta_title" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="meta_description" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="meta_keywords" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="type" type="int" length="10" decimal="0" jt="4" />
+			<column name="registerType" type="int" length="10" decimal="0" jt="4" />
+			<column name="layout" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="status" type="int" length="10" decimal="0" jt="4" />
+			<column name="owner_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="logo" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
+			<column name="balance" type="decimal" length="50" decimal="2" jt="3" />
+			<column name="country_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="currency_id" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_platform" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="platform_country" >
+			<column name="platform_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="country_id" type="int" length="10" decimal="0" jt="4" />
+			<index name="fk-platform_country-country_id" unique="NORMAL" >
+				<column name="country_id" />
+			</index>
+			<index name="fk-platform_country-platform_id" unique="NORMAL" >
+				<column name="platform_id" />
+			</index>
+		</table>
+		<table name="platform_objects_types" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="platform_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="obj_type_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="auction_commission_percent" type="int" length="10" decimal="0" jt="4" />
+			<column name="auction_commission_sum" type="int" length="10" decimal="0" jt="4" />
+			<column name="auction_block_percent" type="int" length="10" decimal="0" jt="4" />
+			<column name="auction_block_sum" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_platform_objects_types" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="fk-platform_objects_types-obj_type_id" unique="NORMAL" >
+				<column name="obj_type_id" />
+			</index>
+			<index name="fk-platform_objects_types-platform_id" unique="NORMAL" >
+				<column name="platform_id" />
+			</index>
+		</table>
+		<table name="platform_objects_types_functional" >
+			<column name="platform_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="obj_type_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="func_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="created_at" type="int" length="10" decimal="0" jt="4" />
+			<column name="price" type="int" length="10" decimal="0" jt="4" />
+			<column name="status" type="int" length="10" decimal="0" jt="4" />
+			<index name="fk-platform_objects_types_functional-func_id" unique="NORMAL" >
+				<column name="func_id" />
+			</index>
+			<index name="fk-platform_objects_types_functional-obj_type_id" unique="NORMAL" >
+				<column name="obj_type_id" />
+			</index>
+			<index name="fk-platform_objects_types_functional-platform_id" unique="NORMAL" >
+				<column name="platform_id" />
+			</index>
+		</table>
+		<table name="platform_request" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="first_name" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="last_name" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="user_country_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="user_region_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="user_town_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="user_phone" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="promo_code" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="sms_code" type="int" length="10" decimal="0" jt="4" />
+			<column name="subDomain" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="name" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="OPF" type="int" length="10" decimal="0" jt="4" />
+			<column name="INN" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="KPP" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="OKPO" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="OKATO" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="company_country_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="company_region_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="company_town_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="index" type="varchar" length="100" decimal="0" jt="12" />
+			<column name="street" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="office" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="company_phone" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="director" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="buh" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="buh_email" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="site" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="bank_name" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="BIK" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="bank_town" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="RS_number" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="KOR_number" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="created_at" type="int" length="10" decimal="0" jt="4" />
+			<column name="updated_at" type="int" length="10" decimal="0" jt="4" />
+			<column name="user_email" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="status" type="int" length="10" decimal="0" jt="4" />
+			<column name="obj_type_ids" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="platform_currency_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="platform_country_id" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_platform_request" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="platform_user" >
+			<column name="platform_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="user_id" type="int" length="10" decimal="0" jt="4" />
+			<index name="fk-platform_user-platform_id" unique="NORMAL" >
+				<column name="platform_id" />
+			</index>
+			<index name="fk-platform_user-user_id" unique="NORMAL" >
+				<column name="user_id" />
+			</index>
+		</table>
+		<table name="region" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" unsigned="y" autoincrement="y" />
+			<column name="country_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="title" type="varchar" length="150" decimal="0" jt="12" />
+			<index name="pk_region" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="registration" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="title" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="type" type="int" length="10" decimal="0" jt="4" />
+			<column name="description" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="status" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_registration" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="sms_codes" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="sms_code" type="int" length="10" decimal="0" jt="4" />
+			<column name="phone" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="created_at" type="int" length="10" decimal="0" jt="4" />
+			<column name="verified" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_sms_codes" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="town" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" unsigned="y" autoincrement="y" />
+			<column name="country_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="region_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="title" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="priority" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_town" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="user" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="first_name" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="middle_name" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="last_name" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="auth_key" type="varchar" length="32" decimal="0" jt="12" mandatory="y" />
+			<column name="password_hash" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
+			<column name="password_reset_token" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="email" type="varchar" length="255" decimal="0" jt="12" mandatory="y" />
+			<column name="address" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="phone" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="status" type="smallint" length="5" decimal="0" jt="5" mandatory="y" >
+				<defo>10</defo>
+			</column>
+			<column name="created_at" type="int" length="10" decimal="0" jt="4" mandatory="y" />
+			<column name="updated_at" type="int" length="10" decimal="0" jt="4" mandatory="y" />
+			<column name="promo_code" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="is_car_for_sell" type="int" length="10" decimal="0" jt="4" />
+			<column name="type" type="int" length="10" decimal="0" jt="4" />
+			<column name="country_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="town_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="last_session_id" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="ip" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="balance" type="int" length="10" decimal="0" jt="4" />
+			<column name="balance_blocked" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_user" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+			<index name="created_at" unique="NORMAL" >
+				<column name="created_at" />
+			</index>
+			<index name="status" unique="NORMAL" >
+				<column name="status" />
+			</index>
+		</table>
+		<table name="user_logs" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="user_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="user_email" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="action" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="old_data" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="new_data" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="object" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="object_name" type="varchar" length="255" decimal="0" jt="12" />
+			<column name="platform_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="created_at" type="int" length="10" decimal="0" jt="4" />
+			<column name="ip" type="varchar" length="255" decimal="0" jt="12" />
+			<index name="pk_user_logs" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+	</schema>
+	<schema name="old_carlink" catalogname="old_carlink" >
+		<table name="auction" >
+			<column name="auction_id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="ext_id" type="varchar" length="50" decimal="0" jt="12" mandatory="y" >
+				<defo>&#039;&#039;</defo>
+			</column>
+			<column name="vin" type="char" length="17" decimal="0" jt="1" mandatory="y" />
+			<column name="parse_provider" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
+			<column name="country_code" type="char" length="2" decimal="0" jt="1" />
+			<column name="city_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="car_condition_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="start_date" type="timestamp" length="19" decimal="0" jt="93" mandatory="y" >
+				<defo>CURRENT_TIMESTAMP</defo>
+			</column>
+			<column name="end_date" type="timestamp" length="19" decimal="0" jt="93" mandatory="y" >
+				<defo>&#039;0000-00-00 00:00:00&#039;</defo>
+			</column>
+			<column name="parse_date" type="datetime" length="19" decimal="0" jt="93" mandatory="y" />
+			<column name="update_time" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<column name="manufacture_year" type="year" decimal="0" jt="4" />
+			<column name="mark" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="model" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="max_power_kw" type="decimal" length="10" decimal="0" jt="3" />
+			<column name="power_type" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<column name="body_type" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="fuel_type" type="varchar" length="20" decimal="0" jt="12" />
+			<column name="engine_type" type="varchar" length="20" decimal="0" jt="12" />
+			<column name="transmission" type="varchar" length="20" decimal="0" jt="12" />
+			<column name="engine_capacity" type="int" length="10" decimal="0" jt="4" />
+			<column name="run_km" type="int" length="10" decimal="0" jt="4" />
+			<column name="Inspect_place" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="number" type="varchar" length="20" decimal="0" jt="12" />
+			<column name="picture_urls" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="information" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="comment" type="varchar" length="10000" decimal="0" jt="12" mandatory="y" >
+				<defo>&#039;   &#039;</defo>
+			</column>
+			<column name="options_salon" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="options_lights" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="options_audio" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="options_other" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="status_id" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<column name="parse_flag" type="int" length="10" decimal="0" jt="4" />
+			<column name="user_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="winning_bid_id" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<column name="winning_bid_user_id" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<column name="trailing_max" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<column name="conditions" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="seller" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="auction_type" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<column name="min_price" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<column name="buyout_price" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<column name="start_price" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<column name="bid_step" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<column name="first_image" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="modification" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="source_url" type="text" length="65535" decimal="0" jt="-1" >
+				<comment><![CDATA[url с источника лота]]></comment>
+			</column>
+			<column name="color" type="varchar" length="100" decimal="0" jt="12" mandatory="y" >
+				<defo>&#039;&#039;</defo>
+				<comment><![CDATA[Цвет]]></comment>
+			</column>
+			<column name="act_carlink" type="varchar" length="500" decimal="0" jt="12" mandatory="y" >
+				<defo>&#039;&#039;</defo>
+				<comment><![CDATA[Ссылка на акт осмотра carlink]]></comment>
+			</column>
+			<column name="act_provider" type="varchar" length="500" decimal="0" jt="12" mandatory="y" >
+				<defo>&#039;&#039;</defo>
+				<comment><![CDATA[Ссылка на акт осмотра поставщика информации]]></comment>
+			</column>
+			<column name="auction_name" type="varchar" length="100" decimal="0" jt="12" mandatory="y" >
+				<defo>&#039;&#039;</defo>
+				<comment><![CDATA[Название аукциона]]></comment>
+			</column>
+			<column name="isTotal" type="bit" decimal="0" jt="-7" mandatory="y" >
+				<defo>0</defo>
+				<comment><![CDATA[Тотальная машина?]]></comment>
+			</column>
+			<column name="car_mark_id" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<column name="car_model_id" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<column name="count_keys" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>1</defo>
+				<comment><![CDATA[кол-во ключей]]></comment>
+			</column>
+			<column name="add_complect_tires" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+				<comment><![CDATA[Дополнительный комплект шин]]></comment>
+			</column>
+			<column name="wheel_drive" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+				<comment><![CDATA[Вид привода 1-передний, 2-задний, 4-полный]]></comment>
+			</column>
+			<column name="legal_type" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<column name="vat" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+				<comment><![CDATA[Включен ли НДС 1-Да, 2- Нет]]></comment>
+			</column>
+			<column name="current_bid_id" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<index name="pk_auction" unique="PRIMARY_KEY" >
+				<column name="auction_id" />
+			</index>
+			<index name="car_mark_id" unique="NORMAL" >
+				<column name="car_mark_id" />
+			</index>
+			<index name="car_model_id" unique="NORMAL" >
+				<column name="car_model_id" />
+			</index>
+			<index name="current_bid_id" unique="NORMAL" >
+				<column name="current_bid_id" />
+			</index>
+			<index name="ext_id" unique="NORMAL" >
+				<column name="ext_id" />
+				<column name="vin" />
+				<column name="user_id" />
+			</index>
+			<index name="getTrans" unique="NORMAL" >
+				<column name="auction_id" />
+				<column name="end_date" />
+				<column name="update_time" />
+			</index>
+			<index name="indexVin" unique="NORMAL" >
+				<column name="vin" />
+			</index>
+			<index name="search" unique="NORMAL" >
+				<column name="city_id" />
+				<column name="manufacture_year" />
+				<column name="end_date" />
+				<column name="mark" />
+				<column name="model" />
+				<column name="body_type" />
+				<column name="engine_type" />
+				<column name="run_km" />
+				<column name="status_id" />
+				<column name="parse_provider" />
+			</index>
+			<index name="status_enddate" unique="NORMAL" >
+				<column name="status_id" />
+				<column name="end_date" />
+			</index>
+			<index name="winning" unique="NORMAL" >
+				<column name="winning_bid_id" />
+				<column name="status_id" />
+				<column name="auction_type" />
+				<column name="end_date" />
+			</index>
+		</table>
+		<table name="bid" >
+			<column name="bid_id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="bid_type_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="status_id" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<column name="summ" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="proxy_summ" type="bigint" length="19" decimal="0" jt="-5" />
+			<column name="auction_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="user_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="bid_timestamp" type="timestamp" length="19" decimal="0" jt="93" mandatory="y" >
+				<defo>CURRENT_TIMESTAMP</defo>
+			</column>
+			<column name="viewability_id" type="int" length="10" decimal="0" jt="4" />
+			<column name="bid_order_id" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_bid" unique="PRIMARY_KEY" >
+				<column name="bid_id" />
+			</index>
+			<index name="auction_id" unique="NORMAL" >
+				<column name="auction_id" />
+				<column name="bid_timestamp" />
+			</index>
+			<index name="bid_selector" unique="NORMAL" >
+				<column name="auction_id" />
+				<column name="bid_type_id" />
+				<column name="user_id" />
+			</index>
+			<index name="bid_type_id" unique="NORMAL" >
+				<column name="bid_type_id" />
+				<column name="user_id" />
+			</index>
+			<index name="sort" unique="NORMAL" >
+				<column name="auction_id" />
+				<column name="status_id" />
+				<column name="bid_type_id" />
+				<column name="summ" />
+				<column name="proxy_summ" />
+				<column name="bid_timestamp" />
+			</index>
+			<fk name="bid_ibfk_1" to_schema="old_carlink" to_table="bid_type" >
+				<fk_column name="bid_type_id" pk="bid_type_id" />
+			</fk>
+		</table>
+		<table name="bid_type" >
+			<column name="bid_type_id" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<defo>0</defo>
+			</column>
+			<column name="bid_type" type="varchar" length="50" decimal="0" jt="12" />
+			<index name="pk_bid_type" unique="PRIMARY_KEY" >
+				<column name="bid_type_id" />
+			</index>
+		</table>
+		<table name="car_condition" >
+			<column name="car_condition_id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="car_condition_name" type="varchar" length="50" decimal="0" jt="12" />
+			<index name="pk_car_condition" unique="PRIMARY_KEY" >
+				<column name="car_condition_id" />
+			</index>
+		</table>
+		<table name="car_mark" >
+			<column name="id_car_mark" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" >
+				<comment><![CDATA[ID]]></comment>
+			</column>
+			<column name="name" type="varchar" length="255" decimal="0" jt="12" mandatory="y" >
+				<comment><![CDATA[Название марки]]></comment>
+			</column>
+			<column name="id_car_type" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<comment><![CDATA[Тип авто]]></comment>
+			</column>
+			<column name="name_rus" type="varchar" length="255" decimal="0" jt="12" >
+				<comment><![CDATA[Назв. рус.]]></comment>
+			</column>
+			<column name="search_term" type="varchar" length="255" decimal="0" jt="12" mandatory="y" >
+				<defo>&#039;&#039;</defo>
+			</column>
+			<index name="pk_car_mark" unique="PRIMARY_KEY" >
+				<column name="id_car_mark" />
+			</index>
+			<index name="TextName" unique="NORMAL" >
+				<column name="name" />
+			</index>
+		</table>
+		<table name="car_model" >
+			<column name="id_car_model" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" >
+				<comment><![CDATA[ID]]></comment>
+			</column>
+			<column name="id_car_mark" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<comment><![CDATA[Марка автомобиля]]></comment>
+			</column>
+			<column name="name" type="varchar" length="255" decimal="0" jt="12" mandatory="y" >
+				<comment><![CDATA[Название модели]]></comment>
+			</column>
+			<column name="id_car_type" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<comment><![CDATA[Тип авто]]></comment>
+			</column>
+			<column name="name_rus" type="varchar" length="255" decimal="0" jt="12" >
+				<comment><![CDATA[Название на русском]]></comment>
+			</column>
+			<column name="search_term" type="varchar" length="255" decimal="0" jt="12" mandatory="y" >
+				<defo>&#039;&#039;</defo>
+			</column>
+			<index name="pk_car_model" unique="PRIMARY_KEY" >
+				<column name="id_car_model" />
+			</index>
+			<index name="id_car_markr" unique="NORMAL" >
+				<column name="name" />
+				<column name="id_car_mark" />
+			</index>
+			<index name="name" unique="NORMAL" >
+				<column name="name" />
+			</index>
+		</table>
+		<table name="car_modification" >
+			<column name="id_car_modification" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" >
+				<comment><![CDATA[ID]]></comment>
+			</column>
+			<column name="id_car_serie" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<comment><![CDATA[Серия автомобиля]]></comment>
+			</column>
+			<column name="id_car_model" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<comment><![CDATA[Модель автомобиля]]></comment>
+			</column>
+			<column name="name" type="varchar" length="255" decimal="0" jt="12" mandatory="y" >
+				<comment><![CDATA[Название модификции]]></comment>
+			</column>
+			<column name="start_production_year" type="int" length="10" decimal="0" jt="4" >
+				<comment><![CDATA[Год начала производства]]></comment>
+			</column>
+			<column name="end_production_year" type="int" length="10" decimal="0" jt="4" >
+				<comment><![CDATA[Год конца производства]]></comment>
+			</column>
+			<column name="id_car_type" type="int" length="10" decimal="0" jt="4" mandatory="y" >
+				<comment><![CDATA[Тип авто]]></comment>
+			</column>
+			<index name="pk_car_modification" unique="PRIMARY_KEY" >
+				<column name="id_car_modification" />
+			</index>
+			<index name="id_car_modr" unique="NORMAL" >
+				<column name="id_car_model" />
+				<column name="name" />
+			</index>
+			<index name="Name Key" unique="NORMAL" >
+				<column name="name" />
+			</index>
+		</table>
+		<table name="city" >
+			<column name="city_id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="city_name" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="translit_name" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="search_term" type="text" length="65535" decimal="0" jt="-1" />
+			<index name="pk_city" unique="PRIMARY_KEY" >
+				<column name="city_id" />
+			</index>
+			<index name="city_name" unique="NORMAL" >
+				<column name="city_name" />
+			</index>
+		</table>
+		<table name="country" >
+			<column name="country_code" type="char" length="2" decimal="0" jt="1" mandatory="y" />
+			<column name="country_name" type="varchar" length="50" decimal="0" jt="12" />
+			<index name="pk_country" unique="PRIMARY_KEY" >
+				<column name="country_code" />
+			</index>
+		</table>
+		<table name="old_ids" >
+			<column name="id" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="vin" type="varchar" length="30" decimal="0" jt="12" />
+		</table>
+		<table name="parser_replace_rules" >
+			<column name="replace_column_name" type="varchar" length="50" decimal="0" jt="12" mandatory="y" />
+			<column name="source_value" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
+			<column name="target_value" type="varchar" length="100" decimal="0" jt="12" mandatory="y" />
+			<index name="pk_parser_replace_rules" unique="PRIMARY_KEY" >
+				<column name="replace_column_name" />
+				<column name="source_value" />
+				<column name="target_value" />
+			</index>
+		</table>
+		<table name="sell_new_litr" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="mark" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="model" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="manufacture_year" type="year" decimal="0" jt="4" />
+			<column name="vin" type="char" length="17" decimal="0" jt="1" />
+			<column name="engine_capacity" type="decimal" length="10" decimal="1" jt="3" />
+			<column name="transmission" type="varchar" length="45" decimal="0" jt="12" />
+			<column name="max_power_kw" type="decimal" length="10" decimal="0" jt="3" />
+			<column name="modification" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="run_km" type="int" length="10" decimal="0" jt="4" />
+			<column name="body_type" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="city" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="price" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_sell_new_litr" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<table name="sell_stat" >
+			<column name="id" type="int" length="10" decimal="0" jt="4" mandatory="y" autoincrement="y" />
+			<column name="mark" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="model" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="manufacture_year" type="year" decimal="0" jt="4" />
+			<column name="vin" type="char" length="17" decimal="0" jt="1" />
+			<column name="engine_capacity" type="int" length="10" decimal="0" jt="4" />
+			<column name="transmission" type="varchar" length="45" decimal="0" jt="12" />
+			<column name="max_power_kw" type="decimal" length="10" decimal="0" jt="3" />
+			<column name="modification" type="text" length="65535" decimal="0" jt="-1" />
+			<column name="run_km" type="int" length="10" decimal="0" jt="4" />
+			<column name="body_type" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="city" type="varchar" length="50" decimal="0" jt="12" />
+			<column name="price" type="int" length="10" decimal="0" jt="4" />
+			<index name="pk_sell_stat" unique="PRIMARY_KEY" >
+				<column name="id" />
+			</index>
+		</table>
+		<procedure name="getWinningBidByAuction" id="Procedure_33b349b9" isSystem="false" >
+			<string><![CDATA[CREATE PROCEDURE old_carlink.getWinningBidByAuction ( IN `carid` INT(11), IN `bidtype` INT(11), IN `userid` INT(11) )
+BEGIN
+SELECT * FROM bid WHERE bid.auction_id=carid AND bid.status_id<>3 
+and
+case when bidtype>0 then bid.bid_type_id=bidtype else 0=0 END
+AND
+case when user_id>0 then bid.user_id=userid else 0=0 END
+ORDER BY summ DESC, proxy_summ DESC, bid_timestamp DESC;
+END]]></string>
+		</procedure>
+		<procedure name="get_auction" id="Procedure_2183828b" isSystem="false" >
+			<string><![CDATA[CREATE PROCEDURE old_carlink.get_auction ( IN `in_id` INT(11) )
+BEGIN
+  SELECT * FROM auction
+  WHERE auction_id=in_id;
+END]]></string>
+		</procedure>
+	</schema>
+	<connector name="old_carlink" database="MySql" driver_class="com.mysql.jdbc.Driver" driver_jar="mysql-connector-java-5.1.40-bin.jar" driver_desc="Standard" host="localhost" port="3306" instance="old_carlink" user="root" />
+	<layout name="old_calink24" id="Layout_222d01b" show_relation="columns" >
+		<entity schema="old_calink24" name="auction" color="f5ddbf" x="850" y="1989" />
+		<entity schema="old_calink24" name="auction_bids" color="f5ddbf" x="663" y="1989" />
+		<entity schema="old_calink24" name="auth_assignment" color="bfd4f5" x="442" y="1241" />
+		<entity schema="old_calink24" name="auth_item" color="bfd4f5" x="272" y="1003" />
+		<entity schema="old_calink24" name="auth_item_child" color="bfd4f5" x="442" y="1003" />
+		<entity schema="old_calink24" name="auth_rule" color="bfd4f5" x="272" y="1241" />
+		<entity schema="old_calink24" name="balance_operation" color="bfbff5" x="1139" y="1496" />
+		<entity schema="old_calink24" name="car" color="c8f5bf" x="663" y="1003" />
+		<entity schema="old_calink24" name="car_document" color="c8f5bf" x="901" y="1003" />
+		<entity schema="old_calink24" name="car_generation" color="c8f5bf" x="901" y="1683" />
+		<entity schema="old_calink24" name="car_image" color="c8f5bf" x="663" y="1683" />
+		<entity schema="old_calink24" name="car_mark" color="f5ddbf" x="238" y="1989" />
+		<entity schema="old_calink24" name="car_model" color="bfbff5" x="1343" y="1989" />
+		<entity schema="old_calink24" name="car_option" color="f5ddbf" x="272" y="510" />
+		<entity schema="old_calink24" name="car_option_group" color="f5ddbf" x="442" y="510" />
+		<entity schema="old_calink24" name="car_option_value" color="f5ddbf" x="442" y="714" />
+		<entity schema="old_calink24" name="cars_options" color="bfbff5" x="1139" y="1989" />
+		<entity schema="old_calink24" name="catalog" color="d2bff5" x="663" y="408" />
+		<entity schema="old_calink24" name="company_uploads" color="d2bff5" x="867" y="408" />
+		<entity schema="old_calink24" name="country" color="d2bff5" x="867" y="731" />
+		<entity schema="old_calink24" name="currency" color="d2bff5" x="663" y="731" />
+		<entity schema="old_calink24" name="dictionary" color="bfd4f5" x="1360" y="612" />
+		<entity schema="old_calink24" name="functional" color="bfd4f5" x="1513" y="612" />
+		<entity schema="old_calink24" name="functional_objects_types" color="bfd4f5" x="1139" y="782" />
+		<entity schema="old_calink24" name="language" color="bfd4f5" x="1190" y="357" />
+		<entity schema="old_calink24" name="menu" color="c8f5bf" x="1989" y="1003" />
+		<entity schema="old_calink24" name="menu_item" color="c8f5bf" x="2159" y="1003" />
+		<entity schema="old_calink24" name="menu_item_translate" color="c8f5bf" x="1785" y="1173" />
+		<entity schema="old_calink24" name="migration" color="c8f5bf" x="1989" y="1173" />
+		<entity schema="old_calink24" name="modules" color="f5ddbf" x="663" y="2261" />
+		<entity schema="old_calink24" name="objects_types" color="bfbff5" x="1785" y="1938" />
+		<entity schema="old_calink24" name="objects_types_translate" color="bfbff5" x="2057" y="1938" />
+		<entity schema="old_calink24" name="page" color="bfbff5" x="2057" y="2159" />
+		<entity schema="old_calink24" name="page_category" color="bfbff5" x="1785" y="2159" />
+		<entity schema="old_calink24" name="page_translate" color="d2bff5" x="2040" y="51" />
+		<entity schema="old_calink24" name="penalization_list" color="d2bff5" x="2244" y="51" />
+		<entity schema="old_calink24" name="penalization_request" color="d2bff5" x="2244" y="323" />
+		<entity schema="old_calink24" name="penalization_response" color="d2bff5" x="1785" y="323" />
+		<entity schema="old_calink24" name="platform" color="bfbff5" x="1326" y="1496" />
+		<entity schema="old_calink24" name="platform_country" color="bfd4f5" x="952" y="3298" />
+		<entity schema="old_calink24" name="platform_objects_types" color="bfd4f5" x="1139" y="3298" />
+		<entity schema="old_calink24" name="platform_objects_types_functional" color="bfd4f5" x="663" y="3451" />
+		<entity schema="old_calink24" name="platform_request" color="bfd4f5" x="714" y="2516" />
+		<entity schema="old_calink24" name="platform_user" color="c8f5bf" x="289" y="1581" />
+		<entity schema="old_calink24" name="region" color="c8f5bf" x="459" y="1581" />
+		<entity schema="old_calink24" name="registration" color="c8f5bf" x="289" y="1734" />
+		<entity schema="old_calink24" name="sms_codes" color="c8f5bf" x="119" y="1734" />
+		<entity schema="old_calink24" name="town" color="f5ddbf" x="442" y="1989" />
+		<entity schema="old_calink24" name="user_logs" color="f5ddbf" x="442" y="2227" />
+		<entity schema="old_calink24" name="car_serie" color="f5ddbf" x="51" y="714" />
+		<entity schema="old_calink24" name="car_modification" color="bfbff5" x="1139" y="2193" />
+		<entity schema="old_calink24" name="company" color="bfbff5" x="1581" y="1003" />
+		<entity schema="old_calink24" name="user" color="bfbff5" x="1326" y="1003" />
+		<browser id="Browse_87324c2" name="auction" confirm_updates="y" >
+			<browse_table schema="old_carlink" entity="auction" x="10" y="10" width="400" height="300" />
+		</browser>
+		<browser id="Browse_103e8f6a" name="car_modification" confirm_updates="y" >
+			<browse_table schema="old_calink24" entity="car_modification" x="10" y="10" width="449" height="346" />
+		</browser>
+	</layout>
+	<layout name="old_calink24 Layout with Groups" id="Layout_2ff033bc" show_relation="columns" >
+		<entity schema="old_calink24" name="auction" color="f5ddbf" x="850" y="2023" />
+		<entity schema="old_calink24" name="auction_bids" color="f5ddbf" x="663" y="2023" />
+		<entity schema="old_calink24" name="auth_assignment" color="bfd4f5" x="442" y="1275" />
+		<entity schema="old_calink24" name="auth_item" color="bfd4f5" x="272" y="1037" />
+		<entity schema="old_calink24" name="auth_item_child" color="bfd4f5" x="442" y="1037" />
+		<entity schema="old_calink24" name="auth_rule" color="bfd4f5" x="272" y="1275" />
+		<entity schema="old_calink24" name="balance_operation" color="bfbff5" x="1139" y="1530" />
+		<entity schema="old_calink24" name="car" color="c8f5bf" x="663" y="1037" />
+		<entity schema="old_calink24" name="car_document" color="c8f5bf" x="901" y="1037" />
+		<entity schema="old_calink24" name="car_generation" color="c8f5bf" x="901" y="1717" />
+		<entity schema="old_calink24" name="car_image" color="c8f5bf" x="663" y="1717" />
+		<entity schema="old_calink24" name="car_mark" color="f5ddbf" x="238" y="2023" />
+		<entity schema="old_calink24" name="car_model" color="bfbff5" x="1343" y="2023" />
+		<entity schema="old_calink24" name="car_modification" color="bfbff5" x="1139" y="2227" />
+		<entity schema="old_calink24" name="car_option" color="f5ddbf" x="272" y="544" />
+		<entity schema="old_calink24" name="car_option_group" color="f5ddbf" x="442" y="544" />
+		<entity schema="old_calink24" name="car_option_value" color="f5ddbf" x="442" y="748" />
+		<entity schema="old_calink24" name="car_serie" color="f5ddbf" x="51" y="748" />
+		<entity schema="old_calink24" name="cars_options" color="bfbff5" x="1139" y="2023" />
+		<entity schema="old_calink24" name="catalog" color="d2bff5" x="663" y="442" />
+		<entity schema="old_calink24" name="company" color="bfbff5" x="1564" y="1037" />
+		<entity schema="old_calink24" name="company_uploads" color="d2bff5" x="867" y="442" />
+		<entity schema="old_calink24" name="country" color="d2bff5" x="867" y="765" />
+		<entity schema="old_calink24" name="currency" color="d2bff5" x="663" y="765" />
+		<entity schema="old_calink24" name="dictionary" color="bfd4f5" x="1360" y="646" />
+		<entity schema="old_calink24" name="functional" color="bfd4f5" x="1513" y="646" />
+		<entity schema="old_calink24" name="functional_objects_types" color="bfd4f5" x="1139" y="816" />
+		<entity schema="old_calink24" name="language" color="bfd4f5" x="1190" y="391" />
+		<entity schema="old_calink24" name="menu" color="c8f5bf" x="1989" y="1037" />
+		<entity schema="old_calink24" name="menu_item" color="c8f5bf" x="2159" y="1037" />
+		<entity schema="old_calink24" name="menu_item_translate" color="c8f5bf" x="1785" y="1207" />
+		<entity schema="old_calink24" name="migration" color="c8f5bf" x="1989" y="1207" />
+		<entity schema="old_calink24" name="modules" color="f5ddbf" x="663" y="2295" />
+		<entity schema="old_calink24" name="objects_types" color="bfbff5" x="1785" y="1972" />
+		<entity schema="old_calink24" name="objects_types_translate" color="bfbff5" x="2057" y="1972" />
+		<entity schema="old_calink24" name="page" color="bfbff5" x="2057" y="2193" />
+		<entity schema="old_calink24" name="page_category" color="bfbff5" x="1785" y="2193" />
+		<entity schema="old_calink24" name="page_translate" color="d2bff5" x="2040" y="85" />
+		<entity schema="old_calink24" name="penalization_list" color="d2bff5" x="2244" y="85" />
+		<entity schema="old_calink24" name="penalization_request" color="d2bff5" x="2244" y="357" />
+		<entity schema="old_calink24" name="penalization_response" color="d2bff5" x="1785" y="357" />
+		<entity schema="old_calink24" name="platform" color="bfbff5" x="1326" y="1530" />
+		<entity schema="old_calink24" name="platform_country" color="bfd4f5" x="952" y="3332" />
+		<entity schema="old_calink24" name="platform_objects_types" color="bfd4f5" x="1139" y="3332" />
+		<entity schema="old_calink24" name="platform_objects_types_functional" color="bfd4f5" x="663" y="3485" />
+		<entity schema="old_calink24" name="platform_request" color="bfd4f5" x="714" y="2550" />
+		<entity schema="old_calink24" name="platform_user" color="c8f5bf" x="289" y="1615" />
+		<entity schema="old_calink24" name="region" color="c8f5bf" x="459" y="1615" />
+		<entity schema="old_calink24" name="registration" color="c8f5bf" x="289" y="1768" />
+		<entity schema="old_calink24" name="sms_codes" color="c8f5bf" x="119" y="1768" />
+		<entity schema="old_calink24" name="town" color="f5ddbf" x="442" y="2023" />
+		<entity schema="old_calink24" name="user" color="bfbff5" x="1326" y="1037" />
+		<entity schema="old_calink24" name="user_logs" color="f5ddbf" x="442" y="2261" />
+		<callout x="663" y="918" pointer="NO" >
+			<comment><![CDATA[You may create multiple layouts with the same or different tables.
+Layouts will be saved to project file. 
+Double-click any column, foreign key or table headers to edit.]]></comment>
+		</callout>
+		<group name="car" color="eef7ec" >
+			<entity schema="old_calink24" name="car" />
+			<entity schema="old_calink24" name="car_document" />
+			<entity schema="old_calink24" name="car_generation" />
+			<entity schema="old_calink24" name="car_image" />
+		</group>
+		<group name="user" color="ececf7" >
+			<entity schema="old_calink24" name="user" />
+			<entity schema="old_calink24" name="company" />
+			<entity schema="old_calink24" name="platform" />
+			<entity schema="old_calink24" name="balance_operation" />
+		</group>
+		<group name="cars_options" color="ececf7" >
+			<entity schema="old_calink24" name="cars_options" />
+			<entity schema="old_calink24" name="car_model" />
+			<entity schema="old_calink24" name="car_modification" />
+		</group>
+		<group name="auction_bids" color="f7f3ec" >
+			<entity schema="old_calink24" name="auction_bids" />
+			<entity schema="old_calink24" name="auction" />
+			<entity schema="old_calink24" name="modules" />
+		</group>
+		<group name="car_mark" color="f7f3ec" >
+			<entity schema="old_calink24" name="car_mark" />
+			<entity schema="old_calink24" name="town" />
+			<entity schema="old_calink24" name="user_logs" />
+		</group>
+		<group name="auth_item" color="ecf0f7" >
+			<entity schema="old_calink24" name="auth_item" />
+			<entity schema="old_calink24" name="auth_item_child" />
+			<entity schema="old_calink24" name="auth_assignment" />
+			<entity schema="old_calink24" name="auth_rule" />
+		</group>
+		<group name="car_option" color="f7f3ec" >
+			<entity schema="old_calink24" name="car_option" />
+			<entity schema="old_calink24" name="car_option_group" />
+			<entity schema="old_calink24" name="car_option_value" />
+			<entity schema="old_calink24" name="car_serie" />
+		</group>
+		<group name="catalog" color="f0ecf7" >
+			<entity schema="old_calink24" name="catalog" />
+			<entity schema="old_calink24" name="company_uploads" />
+			<entity schema="old_calink24" name="country" />
+			<entity schema="old_calink24" name="currency" />
+		</group>
+		<group name="dictionary" color="ecf0f7" >
+			<entity schema="old_calink24" name="dictionary" />
+			<entity schema="old_calink24" name="functional" />
+			<entity schema="old_calink24" name="functional_objects_types" />
+			<entity schema="old_calink24" name="language" />
+		</group>
+		<group name="menu" color="eef7ec" >
+			<entity schema="old_calink24" name="menu" />
+			<entity schema="old_calink24" name="menu_item" />
+			<entity schema="old_calink24" name="menu_item_translate" />
+			<entity schema="old_calink24" name="migration" />
+		</group>
+		<group name="objects_types" color="ececf7" >
+			<entity schema="old_calink24" name="objects_types" />
+			<entity schema="old_calink24" name="objects_types_translate" />
+			<entity schema="old_calink24" name="page" />
+			<entity schema="old_calink24" name="page_category" />
+		</group>
+		<group name="page_translate" color="f0ecf7" >
+			<entity schema="old_calink24" name="page_translate" />
+			<entity schema="old_calink24" name="penalization_list" />
+			<entity schema="old_calink24" name="penalization_request" />
+			<entity schema="old_calink24" name="penalization_response" />
+		</group>
+		<group name="platform_country" color="ecf0f7" >
+			<entity schema="old_calink24" name="platform_country" />
+			<entity schema="old_calink24" name="platform_objects_types" />
+			<entity schema="old_calink24" name="platform_objects_types_functional" />
+			<entity schema="old_calink24" name="platform_request" />
+		</group>
+		<group name="platform_user" color="eef7ec" >
+			<entity schema="old_calink24" name="platform_user" />
+			<entity schema="old_calink24" name="region" />
+			<entity schema="old_calink24" name="registration" />
+			<entity schema="old_calink24" name="sms_codes" />
+		</group>
+	</layout>
+	<layout name="old_calink24 Layout with Relational Data Browse" id="Layout_d131fa6" show_relation="columns" >
+		<entity schema="old_calink24" name="auction" color="f5ddbf" x="850" y="1989" />
+		<entity schema="old_calink24" name="auction_bids" color="f5ddbf" x="663" y="1989" />
+		<entity schema="old_calink24" name="auth_item_child" color="bfd4f5" x="442" y="1003" />
+		<entity schema="old_calink24" name="balance_operation" color="bfbff5" x="1139" y="1496" />
+		<entity schema="old_calink24" name="car" color="c8f5bf" x="663" y="1003" />
+		<entity schema="old_calink24" name="car_generation" color="c8f5bf" x="901" y="1683" />
+		<entity schema="old_calink24" name="car_image" color="c8f5bf" x="663" y="1683" />
+		<entity schema="old_calink24" name="car_mark" color="f5ddbf" x="238" y="1989" />
+		<entity schema="old_calink24" name="car_model" color="bfbff5" x="1343" y="1989" />
+		<entity schema="old_calink24" name="car_option" color="f5ddbf" x="272" y="510" />
+		<entity schema="old_calink24" name="car_option_group" color="f5ddbf" x="442" y="510" />
+		<entity schema="old_calink24" name="car_option_value" color="f5ddbf" x="442" y="714" />
+		<entity schema="old_calink24" name="car_serie" color="f5ddbf" x="51" y="714" />
+		<entity schema="old_calink24" name="cars_options" color="bfbff5" x="1139" y="1989" />
+		<entity schema="old_calink24" name="catalog" color="d2bff5" x="663" y="408" />
+		<entity schema="old_calink24" name="company" color="bfbff5" x="1564" y="1003" />
+		<entity schema="old_calink24" name="company_uploads" color="d2bff5" x="867" y="408" />
+		<entity schema="old_calink24" name="country" color="d2bff5" x="867" y="731" />
+		<entity schema="old_calink24" name="currency" color="d2bff5" x="663" y="731" />
+		<entity schema="old_calink24" name="dictionary" color="bfd4f5" x="1360" y="612" />
+		<entity schema="old_calink24" name="functional" color="bfd4f5" x="1513" y="612" />
+		<entity schema="old_calink24" name="functional_objects_types" color="bfd4f5" x="1139" y="782" />
+		<entity schema="old_calink24" name="language" color="bfd4f5" x="1190" y="357" />
+		<entity schema="old_calink24" name="menu_item" color="c8f5bf" x="2159" y="1003" />
+		<entity schema="old_calink24" name="menu_item_translate" color="c8f5bf" x="1785" y="1173" />
+		<entity schema="old_calink24" name="migration" color="c8f5bf" x="1989" y="1173" />
+		<entity schema="old_calink24" name="modules" color="f5ddbf" x="663" y="2261" />
+		<entity schema="old_calink24" name="objects_types" color="bfbff5" x="1785" y="1938" />
+		<entity schema="old_calink24" name="objects_types_translate" color="bfbff5" x="2057" y="1938" />
+		<entity schema="old_calink24" name="page" color="bfbff5" x="2057" y="2159" />
+		<entity schema="old_calink24" name="page_category" color="bfbff5" x="1785" y="2159" />
+		<entity schema="old_calink24" name="page_translate" color="d2bff5" x="2040" y="51" />
+		<entity schema="old_calink24" name="penalization_list" color="d2bff5" x="2244" y="51" />
+		<entity schema="old_calink24" name="penalization_request" color="d2bff5" x="2244" y="323" />
+		<entity schema="old_calink24" name="platform" color="bfbff5" x="1326" y="1496" />
+		<entity schema="old_calink24" name="platform_country" color="bfd4f5" x="952" y="3298" />
+		<entity schema="old_calink24" name="platform_objects_types" color="bfd4f5" x="1139" y="3298" />
+		<entity schema="old_calink24" name="platform_objects_types_functional" color="bfd4f5" x="663" y="3451" />
+		<entity schema="old_calink24" name="platform_request" color="bfd4f5" x="714" y="2516" />
+		<entity schema="old_calink24" name="platform_user" color="c8f5bf" x="289" y="1581" />
+		<entity schema="old_calink24" name="region" color="c8f5bf" x="459" y="1581" />
+		<entity schema="old_calink24" name="registration" color="c8f5bf" x="289" y="1734" />
+		<entity schema="old_calink24" name="sms_codes" color="c8f5bf" x="119" y="1734" />
+		<entity schema="old_calink24" name="town" color="f5ddbf" x="442" y="1989" />
+		<entity schema="old_calink24" name="user_logs" color="f5ddbf" x="442" y="2227" />
+		<entity schema="old_calink24" name="car_document" color="c8f5bf" x="901" y="1003" />
+		<entity schema="old_calink24" name="auth_rule" color="bfd4f5" x="272" y="1241" />
+		<entity schema="old_calink24" name="auth_assignment" color="bfd4f5" x="442" y="1241" />
+		<entity schema="old_calink24" name="auth_item" color="bfd4f5" x="272" y="1003" />
+		<entity schema="old_calink24" name="penalization_response" color="d2bff5" x="1785" y="323" />
+		<entity schema="old_calink24" name="menu" color="c8f5bf" x="1989" y="1003" />
+		<entity schema="old_calink24" name="car_modification" color="bfbff5" x="1139" y="2193" />
+		<entity schema="old_calink24" name="user" color="bfbff5" x="1326" y="1003" />
+		<callout x="663" y="884" pointer="NO" >
+			<comment><![CDATA[Use the Relational Data Browse for exploring data from multiple tables at a time.
+Tables should be bind by foreign keys - if they are not you can create VIRTUAL foreign keys in the layout. 
+Virtual foreign keys will be saved to project file.
+ 
+Descend into children tables by pressing the foreign key arrow icon near title.
+Right-click column headers in browse tables to set filters.]]></comment>
+		</callout>
+		<browser id="Browse_5e2f8dd" name="Sample Relational Data Browse" confirm_updates="y" >
+			<browse_table schema="old_calink24" entity="car" x="10" y="10" width="400" height="300" >
+				<browse_table schema="old_calink24" entity="car_generation" fk="car-generation_id" x="420" y="10" width="400" height="300" record_view="y" >
+					<browse_table schema="old_calink24" entity="car" fk="car-generation_id" x="830" y="10" width="400" height="300" />
+				</browse_table>
+			</browse_table>
+		</browser>
+		<browser id="Browse_298594fa" name="car_document" confirm_updates="y" >
+			<browse_table schema="old_calink24" entity="car_document" x="10" y="10" width="400" height="300" />
+		</browser>
+		<browser id="Browse_1f5c3be4" name="car_modification" confirm_updates="y" >
+			<browse_table schema="old_calink24" entity="car_modification" x="10" y="10" width="400" height="300" />
+		</browser>
+		<browser id="Browse_2f71fb28" name="user" confirm_updates="y" >
+			<browse_table schema="old_calink24" entity="user" x="10" y="10" width="400" height="300" />
+		</browser>
+		<browser id="Browse_160884b2" name="user_001" confirm_updates="y" >
+			<browse_table schema="old_calink24" entity="user" x="10" y="10" width="400" height="300" />
+		</browser>
+	</layout>
+	<layout name="old_carlink_2" id="Layout_1e6657a4" show_page_borders="y" show_relation="columns" >
+		<entity schema="old_carlink" name="car_mark" color="bcd5f1" x="119" y="204" />
+		<entity schema="old_carlink" name="car_modification" color="bcd5f1" x="68" y="629" />
+		<entity schema="old_carlink" name="auction" color="bcd5f1" x="255" y="51" />
+		<entity schema="old_carlink" name="bid" color="bcd5f1" x="459" y="85" />
+		<entity schema="old_carlink" name="bid_type" color="bcd5f1" x="646" y="85" />
+		<entity schema="old_carlink" name="city" color="bcd5f1" x="476" y="340" />
+		<entity schema="old_carlink" name="country" color="bcd5f1" x="476" y="476" />
+		<entity schema="old_carlink" name="sell_new_litr" color="bcd5f1" x="459" y="782" />
+		<entity schema="old_carlink" name="sell_stat" color="bcd5f1" x="629" y="782" />
+		<entity schema="old_carlink" name="parser_replace_rules" color="bcd5f1" x="51" y="884" />
+		<entity schema="old_carlink" name="car_condition" color="bcd5f1" x="85" y="357" />
+		<entity schema="old_carlink" name="car_model" color="bcd5f1" x="119" y="459" />
+		<entity schema="old_carlink" name="old_ids" color="bcd5f1" x="493" y="578" />
+		<browser id="Browse_297417dc" name="auction" confirm_updates="y" >
+			<browse_table schema="old_carlink" entity="auction" x="10" y="10" width="1012" height="760" />
+		</browser>
+		<browser id="Browse_d14a8b2" name="bid" confirm_updates="y" >
+			<browse_table schema="old_carlink" entity="bid" x="10" y="10" width="400" height="300" record_view="y" />
+		</browser>
+		<browser id="Browse_38ee62a5" name="car_model" confirm_updates="y" >
+			<browse_table schema="old_carlink" entity="car_model" x="10" y="10" width="564" height="356" />
+		</browser>
+		<browser id="Browse_1454130f" name="old_ids" confirm_updates="y" >
+			<browse_table schema="old_carlink" entity="old_ids" x="10" y="10" width="400" height="300" />
+		</browser>
+		<browser id="Browse_e2011da" name="parser_replace_rules" confirm_updates="y" >
+			<browse_table schema="old_carlink" entity="parser_replace_rules" x="10" y="10" width="400" height="300" />
+		</browser>
+		<browser id="Browse_2b7606e4" name="sell_new_litr" confirm_updates="y" >
+			<browse_table schema="old_carlink" entity="sell_new_litr" x="10" y="10" width="449" height="346" />
+		</browser>
+		<browser id="Browse_125a9275" name="sell_stat" confirm_updates="y" >
+			<browse_table schema="old_carlink" entity="sell_stat" x="10" y="10" width="400" height="300" record_view="y" />
+		</browser>
+	</layout>
+</project>
