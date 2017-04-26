@@ -55,7 +55,11 @@ echo "Checking carl_auth schema... . See logs in $log_path/tests.log"
 psql -v db_user="'$db_user'" -h $db_host -p $db_port -d $db_name -U $db_user -v db_pass="'$db_pass'" -v db_name=$db_name \
 -f ./sql/check_auth.sql #&>>$log_path/tests.log
 
-
+echo "Executing after test script... ." 
+if [ -f ./sql/after_test.sql ] ; then
+	psql -v db_user="'$db_user'" -h $db_host -p $db_port -d $db_name -U $db_user -v db_pass="'$db_pass'" -v db_name=$db_name \
+		-f ./sql/after_test.sql #&>>$log_path/tests.log
+fi;
  
 echo "See logs in $log_path/tests.log"
 #tail -20 $log_path/tests.log

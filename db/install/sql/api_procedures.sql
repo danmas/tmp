@@ -1,22 +1,5 @@
 
 
-drop type if exists t_prof_list cascade;
-create type t_prof_list as (
-  prof_id   int,
-  user_name varchar, 
-  is_active varchar(1),
-  corp_name varchar, 
-  prof_type varchar
-);
-
-
-drop type if exists en_user_state;
-create type en_user_state as enum ('UNKNOWN', 'CONFIRMED_SINGLE', 'CONFIRMED');	
-
-
-drop type if exists en_verif_code_type;
-create type en_verif_code_type as enum ('E_MAIL', 'PHONE');	
-
 
 ----------------------------------------------------------------------------------
 --  Создание нового юзера
@@ -496,32 +479,52 @@ $$ language plpgsql;
 create or replace function carl_auth.setVerifCode(p_user_id int, p_code varchar, p_code_type varchar) returns void
 as $$
 declare
-	_id int;
-	_verify_code_id int;
+	_id    int;
+	_cnt   int;
+	_vc_id int;
+	_ct    en_verif_code_type;
 	text_var1 text;
 	text_var2 text;
 	text_var3 text;	
 	text_var4 text;	
 begin
-	select id into _verify_code_id from verify_code where user_id=p_user_id and type=p_code_type;
+
+	begin
+		_ct = p_code_type::en_verif_code_type;
+	exception when others then
+		raise exception using message=getMessage('VERIFY_CODE_BAD_TYPE')||p_code_type;
+	end;
 	
-	if(_verify_code_id is null) then
-		insert into verify_code (type, code, user_id) values (p_code_type, p_code, p_user_id) returning id into _id;
+	/*
+	select count(*) into _cnt from verify_code where user_id = p_user_id 
+		and code_type::varchar = p_code_type;
+
+	if(_cnt = 0) then
+		raise exception using message=getMessage('VERIFY_CODE_NOT_FOUND')||'+'||p_code_type;
+	end if;
+	*/
+	
+	select id into _vc_id from verify_code where user_id = p_user_id 
+		and code_type::varchar = p_code_type;
+	
+	if(_vc_id is null) then
+		insert into verify_code (code_type, code, user_id) values 
+			(p_code_type::en_verif_code_type, p_code, p_user_id) returning id into _id;
 	else
-		update verify_code set code=p_code, code_received=null, dt_received=null
-			where verify_code_id = _verify_code_id;
+		update verify_code set code = p_code, code_received = null, dt_received = null
+			where id = _vc_id;
 	end if;	
 exception when others then	
-  /*get stacked diagnostics text_var1 = message_text,
+  get stacked diagnostics text_var1 = message_text,
                           text_var2 = table_name,
                           text_var3 = schema_name,
-						  text_var4 = pg_exception_context;*/
-	-- raise notice 'Error code:%',SQLSTATE
-	if(sqlstate = '23514') then 
-		raise exception using message=getMessage('VERIFY_CODE_BAD_TYPE')||p_code_type;
-	else
-		raise exception using message=message_text;
-	end if;	
+						  text_var4 = pg_exception_context;
+	---- raise notice 'Error code:%',SQLSTATE
+	--if(sqlstate = '22P02'/*'23514'*/) then 
+	--	raise exception using message=getMessage('VERIFY_CODE_BAD_TYPE')||'..'||p_code_type;
+	--else
+		raise exception using message=text_var1;
+	--end if;	
 	return;
 end
 $$ language plpgsql;
@@ -542,18 +545,21 @@ as $$
 declare
 	_code    varchar;
 	_dt_send timestamp;
-	_s varchar;
+	_s       varchar;
+	_ct      en_verif_code_type;
 begin
-	if(p_code_type<>'E_MAIL' && p_code_type<>'PHONE') then
+	begin
+		_ct = p_code_type::en_verif_code_type;
+	exception when others then
 		raise exception using message=getMessage('VERIFY_CODE_BAD_TYPE')||p_code_type;
-	end if;
+	end;
 	-- есть код?
 	select vc.code, vc.dt_send into _code, _dt_send from verify_code vc where vc.user_id = p_user_id
-		and vc.type = p_code_type;
+		and vc.code_type::varchar = p_code_type;
 	-- raise notice '_code %',_code;	
 	if(_code is null) then
 		--raise exception 'Не найден код подтверждения. Код не был отправлен?';
-		raise exception using message=getMessage('NOT_FOUND_VERIFY_CODE');
+		raise exception using message=getMessage('VERIFY_CODE_NOT_FOUND');
 	end if;	
 	-- не "протух"?
 	if(_dt_send < (now() - interval '24 hours')) then
@@ -564,35 +570,32 @@ begin
 	if(p_code = _code) then
 		-- записываем время получения
 		update verify_code vc set dt_received=now() where vc.user_id = p_user_id
-			and vc.type = p_code_type;
+			and vc.code_type::varchar = p_code_type;
 		return 'Y';
 	else
 		-- записываем последний (неверный код) и время получения
 		update verify_code vc set dt_received=now(), code_received=p_code where vc.user_id = p_user_id
-			and vc.type = p_code_type;
+			and vc.code_type::varchar = p_code_type;
 		return 'N';
 	end if;	
 end
 $$ language plpgsql;
 	
 	
-/*	
 ----------------------------------------------------------------------------------
 --  Выставляет статус пользователя
 --  Возвращвет: 
---  Исключения: выбрасывается исключение в случае ошибок (см выше), 
---                  "Нет такого статуса"
+--  Исключения: 
 --  Пример: setUserStatus(_user_id,'GUEST');
 ----------------------------------------------------------------------------------
-create or replace function carl_auth.setUserStatus(p_user_id int, p_status t_user_st) returns void
+create or replace function carl_auth.setUserStatus(p_user_id int, p_status varchar) returns void
 as $$
 declare
 begin
-	--setUserStatus(_user_id,'GUEST');
+	update users set status=p_status where id=p_user_id;
 end
 $$ language plpgsql;
 	
-*/	
 
 
 ----------------------------------------------------------------------------------
@@ -645,13 +648,25 @@ end
 $$ language plpgsql;
 
 
+
+----------------------------------------------------------------------------------
+--  Генерация последовательности случайных букв
+--  Возвращвет: текст сообщения
+--  Исключения: 
+--  Пример: 
+----------------------------------------------------------------------------------
+create or replace function carl_comm.random_text(len integer) returns text as $$
+        select string_agg(chr(trunc(65+random()*26)::integer),'') from generate_series(1,$1);
+$$ language sql;
+
+
 select setMessage('NO_MESSAGE_FOR_CODE','Нет собщения для кода %','RU');
-select setMessage('NOT_FOUND_VERIFY_CODE','Не найден код подтверждения. Код не был отправлен?');	
+select setMessage('VERIFY_CODE_NOT_FOUND','Не найден код подтверждения. Код не был отправлен?');	
 select setMessage('VERIFY_CODE_TIMEOUT','Превышено время ожидания кода подтверждения.');	
+select setMessage('VERIFY_CODE_BAD_TYPE','Неверный тип кода верификации: ');
 
 select setMessage('ALREADY_EXIST_USER_WITH_E_MAIL','Уже существет пользователь с таким е-мэйлом.');
 select setMessage('ALREADY_EXIST_USER_WITH_PHONE','Уже существет пользователь с таким таким номером телефона.');
-select setMessage('VERIFY_CODE_BAD_TYPE','Неверный тип кода верификации: ');
 
 /*--------------------------------------------------------------------------------
 	exception

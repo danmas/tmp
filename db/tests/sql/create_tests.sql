@@ -63,14 +63,21 @@ begin
 	    , getMessage('VERIFY_CODE_BAD_TYPE')||'%'
 		,'проверка выбрасывания исключения на неверный тип в setVerifCode()'));
 
-	return next (select throws_ok('select isVerifCodeCorrect('||_user_id+1||', ''123456'', ''+E_MAIL'')'
-	    , getMessage('NOT_FOUND_VERIFY_CODE')
+	return next (select throws_like('select isVerifCodeCorrect('||_user_id+1||', ''123456'', ''+E_MAIL'')'
+	    , getMessage('VERIFY_CODE_BAD_TYPE')||'%'
 		,'проверка выбрасывания исключения на неверный тип в isVerifCodeCorrect()'));
 	
 	return next (select throws_ok('select isVerifCodeCorrect('||_user_id+1||', ''+++++'', ''E_MAIL'')'
-	    , getMessage('NOT_FOUND_VERIFY_CODE')
-		,'проверка выбрасывания исключения NOT_FOUND_VERIFY_CODE в isVerifCodeCorrect()'));
+	    , getMessage('VERIFY_CODE_NOT_FOUND')
+		,'проверка выбрасывания исключения VERIFY_CODE_NOT_FOUND в isVerifCodeCorrect()'));
 
+	--+ проверка протухания кода	
+	update verify_code set dt_send = now() - interval '25 hours'
+		where user_id = _user_id;
+	
+	return next (select throws_ok('select isVerifCodeCorrect('||_user_id||', ''123456'', ''E_MAIL'')'
+	    , getMessage('VERIFY_CODE_TIMEOUT')
+		,'проверка выбрасывания исключения VERIFY_CODE_TIMEOUT в isVerifCodeCorrect()'));
 	
 	--setUserStatus(_user_id,'GUEST');
 	
@@ -127,7 +134,7 @@ begin
 	-- проверка наличия типов	
 	return next (select types_are(
 		'carl_comm'
-		, array[ 't_prof_list', 't_user_state' ]
+		, array[ 't_prof_list', 'en_user_state', 'en_verif_code_type' ]
 		, 'все необходимые типы имеются')
 		);		
 		
@@ -267,10 +274,6 @@ begin
 end;
 $$ language plpgsql;
 
-
-create or replace function carl_comm.random_text(len integer) returns text as $$
-        select string_agg(chr(trunc(65+random()*26)::integer),'') from generate_series(1,$1);
-$$ language sql;
 
 -- select random_text(10);
 

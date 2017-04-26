@@ -1,12 +1,4 @@
-/*
-Created: 18.04.2017
-Modified: 26.04.2017
-Model: Carlink-db-0.1
-Database: PostgreSQL 9.5
-*/
-
-
-/*
+﻿/*
 Created: 18.04.2017
 Modified: 26.04.2017
 Model: Carlink-db-0.1
