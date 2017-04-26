@@ -408,24 +408,12 @@ end
 $$ language plpgsql;
 
 
-
-
-
-
-
-
-
-
-
-
 --	Если пользователь с таким id не найден, то на все функции выбасывается исключение 
 --  "Пользователь не найден"
 --	Если пользователь с таким id блокирован, то на все функции выбасывается исключение 
 --  "Пользователь заблокирован"
 --	Если пользователь с таким id удален, то на все функции выбасывается исключение 
 --  "Пользователь удален"
- 
-	
 	
 ----------------------------------------------------------------------------------
 --  Регистрация нового юзера
@@ -433,8 +421,9 @@ $$ language plpgsql;
 --  Исключения: выбрасывает исключение в случае ошибки
 --  Пример: 
 ----------------------------------------------------------------------------------
-create or replace function registerNewUser(p_first_name text
-	, p_last_name text, p_email text, p_phone text, p_password_hash text) returns int
+drop function if exists registerNewUser(varchar,varchar,varchar,varchar,varchar);
+create or replace function registerNewUser(p_first_name varchar
+	, p_last_name varchar, p_email varchar, p_phone varchar, p_password_hash varchar) returns int
 as $$
 declare
   v int; cnt int;
@@ -459,12 +448,12 @@ begin
   insert into users (first_name, last_name, email, phone, password_hash) values (
 		 p_first_name, p_last_name, p_email, p_phone, p_password_hash)
     returning id into v;
-  raise notice 'Создан пользователь с id "%"', v;
+  -- raise notice 'Создан пользователь с id "%"', v;
   return v;
 end
 $$ language plpgsql;
 
-	
+
 ----------------------------------------------------------------------------------
 --  Сохранение промо кода.
 --  дата отправки будет текущей
@@ -476,6 +465,7 @@ $$ language plpgsql;
 --  Пример: setEmailVerifCode(_user_id,'123456','E_MAIL');
 --          setEmailVerifCode(_user_id,'123456','PHONE'); 
 ----------------------------------------------------------------------------------
+drop function if exists carl_auth.setVerifCode(int, varchar, varchar);
 create or replace function carl_auth.setVerifCode(p_user_id int, p_code varchar, p_code_type varchar) returns void
 as $$
 declare
@@ -483,10 +473,10 @@ declare
 	_cnt   int;
 	_vc_id int;
 	_ct    en_verif_code_type;
-	text_var1 text;
-	text_var2 text;
-	text_var3 text;	
-	text_var4 text;	
+	_err_txt1 text;
+	_err_txt2 text;
+	_err_txt3 text;	
+	_err_txt4 text;	
 begin
 
 	begin
@@ -494,42 +484,47 @@ begin
 	exception when others then
 		raise exception using message=getMessage('VERIFY_CODE_BAD_TYPE')||p_code_type;
 	end;
-	
-	/*
-	select count(*) into _cnt from verify_code where user_id = p_user_id 
-		and code_type::varchar = p_code_type;
 
-	if(_cnt = 0) then
-		raise exception using message=getMessage('VERIFY_CODE_NOT_FOUND')||'+'||p_code_type;
-	end if;
-	*/
-	
 	select id into _vc_id from verify_code where user_id = p_user_id 
 		and code_type::varchar = p_code_type;
-	
+		
 	if(_vc_id is null) then
 		insert into verify_code (code_type, code, user_id) values 
 			(p_code_type::en_verif_code_type, p_code, p_user_id) returning id into _id;
 	else
 		update verify_code set code = p_code, code_received = null, dt_received = null
 			where id = _vc_id;
-	end if;	
+	end if;
 exception when others then	
-  get stacked diagnostics text_var1 = message_text,
-                          text_var2 = table_name,
-                          text_var3 = schema_name,
-						  text_var4 = pg_exception_context;
-	---- raise notice 'Error code:%',SQLSTATE
-	--if(sqlstate = '22P02'/*'23514'*/) then 
-	--	raise exception using message=getMessage('VERIFY_CODE_BAD_TYPE')||'..'||p_code_type;
-	--else
-		raise exception using message=text_var1;
-	--end if;	
+  get stacked diagnostics _err_txt1 = message_text,
+                          _err_txt2 = table_name,
+                          _err_txt3 = schema_name,
+						  _err_txt4 = pg_exception_context;
+		raise exception using message=_err_txt1;
 	return;
 end
 $$ language plpgsql;
 	
 
+/*	
+----------------------------------------------------------------------------------
+--  Проверка кода подтверждения отправленного ранее.
+--  Параметры:   p_user_id - id пользователя, p_code - код
+--             , p_code_type - тип кода верификации ('E_MAIL' или 'PHONE')
+--  Возвращвет: 
+--  Исключения: выбрасывается исключения в случае ошибок
+--  Пример: _ans = _isVerifCodeCorrect(_user_id,'123456','E_MAIL');
+----------------------------------------------------------------------------------
+create or replace function carl_auth.checkVerifCode(p_user_id int
+	, p_code varchar, p_code_type varchar) returns varchar(1) 
+as $$
+declare
+begin
+	
+end;
+*/	
+
+-- checkVerifyCode
 ----------------------------------------------------------------------------------
 --  Проверка кода подтверждения отправленного ранее.
 --  Параметры:   p_user_id - id пользователя, p_code - код
@@ -537,9 +532,123 @@ $$ language plpgsql;
 --  Возвращвет 'Y' - если промо код совпадает и "не протух" 
 --  Исключения: выбрасывается исключение в случае ошибок (см выше), 
 --                    если p_code null или '' - "Неверно задан промо код"       
---  Пример: _ans = isVerifCodeCorrect(_user_id,'123456','E_MAIL');
+--  Пример: _ans = _isVerifCodeCorrect(_user_id,'123456','E_MAIL');
 ----------------------------------------------------------------------------------
-create or replace function carl_auth.isVerifCodeCorrect(p_user_id int
+drop function if exists    carl_auth.checkVerifyCode(int, varchar);
+create or replace function carl_auth.checkVerifyCode(p_user_id int, p_code varchar) returns varchar(1) 
+as $$
+declare
+	_m_code    varchar;	_m_dt_send timestamp;
+	_p_code    varchar;	_p_dt_send timestamp;
+	_s         varchar;
+	--_code_type varchar;
+	_ans       varchar;
+	--_ct      en_verif_code_type;
+begin
+    select code, dt_send  into _m_code, _m_dt_send from verify_code vc
+        where vc.user_id = p_user_id
+                and vc.code_type::varchar = 'E_MAIL';
+    select code, dt_send into _p_code, _p_dt_send from verify_code vc
+		where vc.user_id = p_user_id
+                and vc.code_type::varchar = 'PHONE';
+		
+	if(_p_code is null and _m_code is null) then
+		raise exception using message=getMessage('VERIFY_CODE_NOT_FOUND');
+	end if;	
+	
+	if(_p_code is not null and _p_code = p_code ) then
+		_ans := _isVerifCodeCorrect(p_user_id, p_code, _p_code, 'PHONE', _p_dt_send);
+		if(_ans = 'Y') then 
+			return 'Y';
+		elsif(_ans = 'TIMEOUT') then 
+			raise exception using message=getMessage('VERIFY_CODE_TIMEOUT');
+		end if;
+	elsif(_m_code is not null and _m_code = p_code ) then
+		_ans := _isVerifCodeCorrect(p_user_id, p_code, _m_code, 'E_MAIL', _m_dt_send);
+		if(_ans = 'Y') then 
+			return 'Y';
+		elsif(_ans = 'TIMEOUT') then 
+			raise exception using message=getMessage('VERIFY_CODE_TIMEOUT');
+		end if;
+	end if;
+	return 'N';
+end
+$$ language plpgsql;
+	
+	
+
+
+----------------------------------------------------------------------------------
+--  Проверка кода подтверждения отправленного ранее.
+--  Параметры:   p_user_id - id пользователя, p_code - код
+--             , p_code_type - тип кода верификации ('E_MAIL' или 'PHONE')
+--  Возвращвет 'Y' - если промо код совпадает и "не протух" 
+--             'TIMEOUT' - если протух
+--  Исключения: 
+--  Пример: _ans = _isVerifCodeCorrect(_user_id,'123456','E_MAIL');
+----------------------------------------------------------------------------------
+drop function if exists carl_auth._isVerifCodeCorrect(int, varchar, varchar, varchar, timestamp);
+create or replace function carl_auth._isVerifCodeCorrect(p_user_id int
+	, p_code varchar, p_indb_code varchar, p_code_type varchar, p_dt_send timestamp) returns varchar(1) 
+as $$
+declare
+	_s       varchar;
+	-- _ct      en_verif_code_type;
+begin
+/*
+	begin
+		_ct = p_code_type::en_verif_code_type;
+	exception when others then
+		raise exception using message=getMessage('VERIFY_CODE_BAD_TYPE')||p_code_type;
+	end;
+	-- есть код?
+	select vc.code, vc.dt_send into _code, _dt_send from verify_code vc where vc.user_id = p_user_id
+		and vc.code_type::varchar = p_code_type;
+	-- raise notice '_code %',_code;	
+	if(_code is null) then
+		--raise exception 'Не найден код подтверждения. Код не был отправлен?';
+		raise exception using message=getMessage('VERIFY_CODE_NOT_FOUND');
+	end if;	*/
+	-- не "протух"?
+	if(p_dt_send < (now() - interval '24 hours')) then
+		-- raise exception 'Превышено время ожидания кода подтверждения.';
+		return 'TIMEOUT'; --
+	end if;
+	-- совпадает?
+	if(p_code = p_indb_code) then
+		-- записываем время получения
+		update verify_code vc set dt_received=now() where vc.user_id = p_user_id
+			and vc.code_type::varchar = p_code_type;
+			
+		-- меняем статус юзера 
+		if(p_code_type = 'PHONE') then
+			update users set status = 'CONFIRMED' where id = p_user_id;
+		else
+			update users set status = 'CONFIRMED_SINGLE' where id = p_user_id and status = 'UNKNOWN';
+		end if;
+		return 'Y';
+	else
+		-- записываем последний (неверный код) и время получения
+		update verify_code vc set dt_received=now(), code_received=p_code where vc.user_id = p_user_id
+			and vc.code_type::varchar = p_code_type;
+		return 'N';
+	end if;	
+end
+$$ language plpgsql;
+
+	
+	
+----------------------------------------------------------------------------------
+--  Проверка кода подтверждения отправленного ранее.
+--  Параметры:   p_user_id - id пользователя, p_code - код
+--             , p_code_type - тип кода верификации ('E_MAIL' или 'PHONE')
+--  Возвращвет 'Y' - если промо код совпадает и "не протух" 
+--  Исключения: выбрасывается исключение в случае ошибок (см выше), 
+--                    если p_code null или '' - "Неверно задан промо код"       
+--  Пример: _ans = _isVerifCodeCorrect(_user_id,'123456','E_MAIL');
+--  DEPRICATED
+----------------------------------------------------------------------------------
+create or replace function carl_auth._isVerifCodeCorrect_OLD(p_user_id int
 	, p_code varchar, p_code_type varchar) returns varchar(1) 
 as $$
 declare
@@ -571,6 +680,13 @@ begin
 		-- записываем время получения
 		update verify_code vc set dt_received=now() where vc.user_id = p_user_id
 			and vc.code_type::varchar = p_code_type;
+			
+		-- меняем статус юзера 
+		if(p_code_type = 'PHONE') then
+			update users set status = 'CONFIRMED' where id = p_user_id;
+		else
+			update users set status = 'CONFIRMED_SINGLE' where id = p_user_id and status = 'UNKNOWN';
+		end if;
 		return 'Y';
 	else
 		-- записываем последний (неверный код) и время получения
@@ -583,12 +699,27 @@ $$ language plpgsql;
 	
 	
 ----------------------------------------------------------------------------------
+-- Получение статуса пользователя
+----------------------------------------------------------------------------------
+create or replace function carl_auth._getUserStatus(p_user_id int) returns varchar 
+as $$
+declare
+	_st varchar;
+begin
+	select status::varchar into _st from users where id=p_user_id;
+	return _st;
+end
+$$ language plpgsql;
+
+	
+----------------------------------------------------------------------------------
 --  Выставляет статус пользователя
 --  Возвращвет: 
 --  Исключения: 
 --  Пример: setUserStatus(_user_id,'GUEST');
+--  NOT USED
 ----------------------------------------------------------------------------------
-create or replace function carl_auth.setUserStatus(p_user_id int, p_status varchar) returns void
+create or replace function carl_auth._setUserStatus(p_user_id int, p_status varchar) returns void
 as $$
 declare
 begin

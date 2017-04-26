@@ -18,8 +18,10 @@ create type t_prof_list as (
 
 drop type if exists en_user_state;
 create type en_user_state as enum ('UNKNOWN', 'CONFIRMED_SINGLE', 'CONFIRMED');	
-
+-- CONFIRMED_SINGLE - если подтвержден только мэйл
+-- CONFIRMED        - если подтвержден телефон
 
 drop type if exists en_verif_code_type;
 create type en_verif_code_type as enum ('E_MAIL', 'PHONE');	
 
+-- user_id := getUserByCode(p_code)

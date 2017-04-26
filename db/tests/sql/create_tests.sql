@@ -10,80 +10,136 @@ comment on schema carl_tests is 'The schema for unit tests on carlinkng';
 	
 	select carl_tests.test_check_auth('carl');
 */	
--- drop function carl_tests.test_check_auth(::varchar);
+drop function if exists    carl_tests.test_check_auth(varchar);
 create or replace function carl_tests.test_check_auth(p_db_user varchar)
 returns setof text as
 $$
 declare
 	_user_id       int;
+	_user_id2      int;
 	_user_email    varchar = 'v.loginer@gmail.com';
+	_user_email2   varchar = 'v.loginer2@gmail.com';
 	_ans           varchar(1);
+	_status        varchar;
+	_err_txt1 text;
+	_err_txt2 text;
+	_err_txt3 text;	
+	_err_txt4 text;	
 begin
-	
 	begin
 		delete from users where id = getUserIdByEmail(_user_email)::int;
 	exception when others then
 		null;
-	end;	
+	end;
 	
+	-- 1
 	_user_id = registerNewUser('Вася', 'Логинер', _user_email, null
 		, 'AJGHRKWFWVSDJLKFSSFF'); -- '+7 916 695 20 75', 'ZZZZXXXXXCCCCCVVVV');
-		
 	return next (select is(getUserIdByEmail(_user_email), _user_id
 		, 'id пользователя '||_user_email||'='||_user_id)); 
-	
+	-- 2
 	return next (select lives_ok('select setVerifCode('||_user_id||', ''123456'', ''E_MAIL'')'
 		,'проверка выполнения setVerifCode() для е-мэйла'));
-
-		
-	return next (select lives_ok('select setVerifCode('||_user_id||', ''654321'', ''PHONE'')'
-		,'проверка выполнения setVerifCode() для телефона'));
-		
-	return next (select is(isVerifCodeCorrect(_user_id, '123456', 'E_MAIL')
+	/**/	
+	-- 3	
+	--return next (select lives_ok('select setVerifCode('||_user_id||', ''654321'', ''PHONE'')'
+	--	,'проверка выполнения setVerifCode() для телефона'));
+	-- 4	
+	return next (select is(checkVerifyCode(_user_id, '123456') --, 'E_MAIL')
 		, 'Y'
-		, 'Код мыла проверен')
-		); 
-		
-	return next (select is(isVerifCodeCorrect(_user_id, '654321', 'PHONE')
-		, 'Y'
-		, 'Код телефона проверен')
-		); 
-
-	return next (select is(isVerifCodeCorrect(_user_id, '+123456', 'E_MAIL')
+		, 'Код мыла проверен')); 
+	-- 5	
+	--return next (select is(checkVerifyCode(_user_id, '654321') --, 'PHONE')
+	--	, 'Y'
+	--	, 'Код телефона проверен')); 
+	-- 6
+	return next (select is(checkVerifyCode(_user_id, '+123456') --, 'E_MAIL')
 		, 'N'
-		, 'Неверный код мыла')
-		); 
-		
-	return next (select is(isVerifCodeCorrect(_user_id, '+654321', 'PHONE')
+		, 'Неверный код мыла')); 
+	-- 7	
+	return next (select is(checkVerifyCode(_user_id, '+654321') --, 'PHONE')
 		, 'N'
 		, 'Неверный код телефона')
 		); 
-		
-	return next (select throws_like('select setVerifCode('||_user_id||', ''123456'', ''+E_MAIL'')'
+	-- 8	
+	return next (select throws_like('select setVerifCode('||_user_id||', ''1234567'', ''+E_MAIL'')'
 	    , getMessage('VERIFY_CODE_BAD_TYPE')||'%'
 		,'проверка выбрасывания исключения на неверный тип в setVerifCode()'));
-
-	return next (select throws_like('select isVerifCodeCorrect('||_user_id+1||', ''123456'', ''+E_MAIL'')'
-	    , getMessage('VERIFY_CODE_BAD_TYPE')||'%'
-		,'проверка выбрасывания исключения на неверный тип в isVerifCodeCorrect()'));
-	
-	return next (select throws_ok('select isVerifCodeCorrect('||_user_id+1||', ''+++++'', ''E_MAIL'')'
+    -- 9
+	--return next (select throws_like('select _isVerifCodeCorrect('||_user_id+1||', ''123456'', ''+E_MAIL'')'
+	--   , getMessage('VERIFY_CODE_BAD_TYPE')||'%'
+	--	,'проверка выбрасывания исключения на неверный тип в _isVerifCodeCorrect()'));
+	-- 10
+	return next (select throws_ok('select checkVerifyCode('||_user_id+1||', ''+++++'')' --, ''E_MAIL'')'
 	    , getMessage('VERIFY_CODE_NOT_FOUND')
-		,'проверка выбрасывания исключения VERIFY_CODE_NOT_FOUND в isVerifCodeCorrect()'));
-
+		,'проверка выбрасывания исключения VERIFY_CODE_NOT_FOUND в checkVerifyCode()'));
+	-- 11
 	--+ проверка протухания кода	
 	update verify_code set dt_send = now() - interval '25 hours'
 		where user_id = _user_id;
 	
-	return next (select throws_ok('select isVerifCodeCorrect('||_user_id||', ''123456'', ''E_MAIL'')'
+	return next (select throws_ok('select checkVerifyCode('||_user_id||', ''123456'')' -- , ''E_MAIL'')'
 	    , getMessage('VERIFY_CODE_TIMEOUT')
-		,'проверка выбрасывания исключения VERIFY_CODE_TIMEOUT в isVerifCodeCorrect()'));
+		,'проверка выбрасывания исключения VERIFY_CODE_TIMEOUT в checkVerifyCode()'));
 	
-	--setUserStatus(_user_id,'GUEST');
+
+	begin
+		delete from users where id = getUserIdByEmail(_user_email2)::int;
+	exception when others then
+		null;
+	end;
 	
+	_user_id2 := registerNewUser('Вася2', 'Логинер2', _user_email2, null, 'AJGHRKWFWVSDJLKFSSFF'); 
 	
+	-- 12	
+	return next (select is(_getUserStatus(_user_id2), 'UNKNOWN'
+		, 'Статус нового юзера - UNKNOWN id '||_user_id2 )); 
+	-- 13
+	perform setVerifCode(_user_id2, '0113456', 'E_MAIL');
+	_ans := checkVerifyCode(_user_id2, '0113456'); --, 'E_MAIL');
+	return next (select is(_getUserStatus(_user_id2), 'CONFIRMED_SINGLE'
+		, 'Статус после подтверждения кода по мэйлу - CONFIRMED_SINGLE')); 
+	
+	perform setVerifCode(_user_id2, '111456', 'PHONE');
+	_ans := checkVerifyCode(_user_id2, '111456'); --, 'PHONE');
+	-- 14
+	return next (select is(_getUserStatus(_user_id2), 'CONFIRMED'
+		, 'Статус после подтверждения кода по телефону - CONFIRMED')); 
+	-- 15	
+	begin
+		delete from users where id = getUserIdByEmail(_user_email2)::int;
+	exception when others then
+		null;
+	end;
+	_user_id2 := registerNewUser('Вася2', 'Логинер2', _user_email2, null, 'AJGHRKWFWVSDJLKFSSFF'); 
+	return next (select is(_getUserStatus(_user_id2), 'UNKNOWN'
+		, 'Статус нового юзера - UNKNOWN')); 
+	-- 16
+	perform setVerifCode(_user_id2, '111456', 'PHONE');
+	_ans := checkVerifyCode(_user_id2, '111456'); --, 'PHONE');
+	return next (select is(_getUserStatus(_user_id2), 'CONFIRMED'
+		, 'Статус после подтверждения кода по телефону - CONFIRMED')); 
+	-- 17
+	perform setVerifCode(_user_id2, '113456', 'E_MAIL');
+	_ans := checkVerifyCode(_user_id2, '113456'); --, 'E_MAIL');
+	return next (select is(_getUserStatus(_user_id2), 'CONFIRMED'
+		, 'Статус после подтверждения кода по мэйлу не изменился - CONFIRMED')); 
+	-- 18
+	_ans := checkVerifyCode(_user_id2, '++1456'); --, 'PHONE');
+	return next (select is(_getUserStatus(_user_id2), 'CONFIRMED'
+		, 'Ошибочный ввод кода по телефону не меняет статус - CONFIRMED')); 
+	-- 19	
+	_ans := checkVerifyCode(_user_id2, '++1456'); --, 'E_MAIL');
+	return next (select is(_getUserStatus(_user_id2), 'CONFIRMED'
+		, 'Ошибочный ввод кода по мылу не меняет статус - CONFIRMED')); 
+	/**/
 	return next (select * from finish());
-	
+exception when others then
+  get stacked diagnostics _err_txt1 = message_text,
+                          _err_txt2 = table_name,
+                          _err_txt3 = schema_name,
+						  _err_txt4 = pg_exception_context;
+	return next 'Exeption: '|| _err_txt1 ||CHR(13)||'Context: '|| _err_txt4;	
 end;
 $$ language plpgsql;
 
@@ -121,7 +177,7 @@ begin
 	-- в схеме должны быть именно эти функции
 	return next (select functions_are(
 		'carl_auth'
-		, array[ 'setuserstatus','isverifcodecorrect', 'setverifcode' ]
+		, array[ '_setuserstatus','_getuserstatus','isverifcodecorrect', 'setverifcode' ]
 		, 'в схеме carl_auth все необходимые функции имеются'));	
 	return next (select functions_are(
 		'carl_comm'
@@ -342,4 +398,160 @@ begin
 end;
 $$ language plpgsql;
 */
+
+
+/*
+	Функция проверки процедуры ввода нового пользователя в систему
+	
+	select carl_tests.test_check_auth('carl');
+*/	
+/*
+drop function if exists    carl_tests.test_check_auth(varchar);
+create or replace function carl_tests.test_check_auth(p_db_user varchar)
+returns setof text as
+$$
+declare
+	_user_id       int;
+	_user_id2      int;
+	_user_email    varchar = 'v.loginer@gmail.com';
+	_user_email2   varchar = 'v.loginer2@gmail.com';
+	_ans           varchar(1);
+	_status        varchar;
+	_err_txt1 text;
+	_err_txt2 text;
+	_err_txt3 text;	
+	_err_txt4 text;	
+begin
+	begin
+		delete from users where id = getUserIdByEmail(_user_email)::int;
+	exception when others then
+		null;
+	end;
+	
+	-- 1
+	_user_id = registerNewUser('Вася', 'Логинер', _user_email, null
+		, 'AJGHRKWFWVSDJLKFSSFF'); -- '+7 916 695 20 75', 'ZZZZXXXXXCCCCCVVVV');
+	return next (select is(getUserIdByEmail(_user_email), _user_id
+		, 'id пользователя '||_user_email||'='||_user_id)); 
+	-- 2
+	return next (select lives_ok('select setVerifCode('||_user_id||', ''123456'', ''E_MAIL'')'
+		,'проверка выполнения setVerifCode() для е-мэйла'));
+	-- 3	
+	return next (select lives_ok('select setVerifCode('||_user_id||', ''654321'', ''PHONE'')'
+		,'проверка выполнения setVerifCode() для телефона'));
+	-- 4	
+	return next (select is(_isVerifCodeCorrect(_user_id, '123456', 'E_MAIL')
+		, 'Y'
+		, 'Код мыла проверен')); 
+	-- 5	
+	return next (select is(_isVerifCodeCorrect(_user_id, '654321', 'PHONE')
+		, 'Y'
+		, 'Код телефона проверен')); 
+	-- 6
+	return next (select is(_isVerifCodeCorrect(_user_id, '+123456', 'E_MAIL')
+		, 'N'
+		, 'Неверный код мыла')); 
+	-- 7	
+	return next (select is(_isVerifCodeCorrect(_user_id, '+654321', 'PHONE')
+		, 'N'
+		, 'Неверный код телефона')
+		); 
+	-- 8	
+	return next (select throws_like('select setVerifCode('||_user_id||', ''123456'', ''+E_MAIL'')'
+	    , getMessage('VERIFY_CODE_BAD_TYPE')||'%'
+		,'проверка выбрасывания исключения на неверный тип в setVerifCode()'));
+    -- 9
+	return next (select throws_like('select _isVerifCodeCorrect('||_user_id+1||', ''123456'', ''+E_MAIL'')'
+	    , getMessage('VERIFY_CODE_BAD_TYPE')||'%'
+		,'проверка выбрасывания исключения на неверный тип в _isVerifCodeCorrect()'));
+	-- 10
+	return next (select throws_ok('select _isVerifCodeCorrect('||_user_id+1||', ''+++++'', ''E_MAIL'')'
+	    , getMessage('VERIFY_CODE_NOT_FOUND')
+		,'проверка выбрасывания исключения VERIFY_CODE_NOT_FOUND в _isVerifCodeCorrect()'));
+	-- 11
+	--+ проверка протухания кода	
+	update verify_code set dt_send = now() - interval '25 hours'
+		where user_id = _user_id;
+	
+	return next (select throws_ok('select _isVerifCodeCorrect('||_user_id||', ''123456'', ''E_MAIL'')'
+	    , getMessage('VERIFY_CODE_TIMEOUT')
+		,'проверка выбрасывания исключения VERIFY_CODE_TIMEOUT в _isVerifCodeCorrect()'));
+	
+	--setUserStatus(_user_id,'GUEST');
+
+	begin
+		delete from users where id = getUserIdByEmail(_user_email2)::int;
+	exception when others then
+		null;
+	end;
+	
+	_user_id2 := registerNewUser(...)
+	'Статус нового юзера - UNKNOWN'
+	
+	setVerifCode(_user_id2, '113456', 'E_MAIL');
+	_ans := _isVerifCodeCorrect(_user_id2, '113456', 'E_MAIL');
+	'Статус после подтверждения кода по мэйлу - CONFIRMED_SINGLE'
+	
+	setVerifCode(_user_id2, '111456', 'PHONE');
+	_ans := _isVerifCodeCorrect(_user_id2, '111456', 'PHONE');
+	'Статус после подтверждения кода по телефону - CONFIRMED'
+	
+	setVerifCode(...
+	
+	_user_id2 := registerNewUser('Вася2', 'Логинер2', _user_email2, null
+		, 'AJGHRKWFWVSDJLKFSSFF'); -- '+7 916 695 20 75', 'ZZZZXXXXXCCCCCVVVV');
+	-- 12	
+	return next (select is(_getUserStatus(_user_id2), 'UNKNOWN'
+		, 'Статус нового юзера - UNKNOWN')); 
+	-- 13
+	perform setVerifCode(_user_id2, '113456', 'E_MAIL');
+	_ans := _isVerifCodeCorrect(_user_id2, '113456', 'E_MAIL');
+	return next (select is(_getUserStatus(_user_id2), 'CONFIRMED_SINGLE'
+		, 'Статус после подтверждения кода по мэйлу - CONFIRMED_SINGLE')); 
+	
+	perform setVerifCode(_user_id2, '111456', 'PHONE');
+	_ans := _isVerifCodeCorrect(_user_id2, '111456', 'PHONE');
+	-- 14
+	return next (select is(_getUserStatus(_user_id2), 'CONFIRMED'
+		, 'Статус после подтверждения кода по телефону - CONFIRMED')); 
+	-- 15	
+	begin
+		delete from users where id = getUserIdByEmail(_user_email2)::int;
+	exception when others then
+		null;
+	end;
+	_user_id2 := registerNewUser('Вася2', 'Логинер2', _user_email2, null
+		, 'AJGHRKWFWVSDJLKFSSFF'); -- '+7 916 695 20 75', 'ZZZZXXXXXCCCCCVVVV');
+	return next (select is(_getUserStatus(_user_id2), 'UNKNOWN'
+		, 'Статус нового юзера - UNKNOWN')); 
+	-- 16
+	perform setVerifCode(_user_id2, '111456', 'PHONE');
+	_ans := _isVerifCodeCorrect(_user_id2, '111456', 'PHONE');
+	return next (select is(_getUserStatus(_user_id2), 'CONFIRMED'
+		, 'Статус после подтверждения кода по телефону - CONFIRMED')); 
+	-- 17
+	perform setVerifCode(_user_id2, '113456', 'E_MAIL');
+	_ans := _isVerifCodeCorrect(_user_id2, '113456', 'E_MAIL');
+	return next (select is(_getUserStatus(_user_id2), 'CONFIRMED'
+		, 'Статус после подтверждения кода по мэйлу не изменился - CONFIRMED')); 
+	-- 18
+	_ans := _isVerifCodeCorrect(_user_id2, '++1456', 'PHONE');
+	return next (select is(_getUserStatus(_user_id2), 'CONFIRMED'
+		, 'Ошибочный ввод кода по телефону не меняет статус - CONFIRMED')); 
+	-- 19	
+	_ans := _isVerifCodeCorrect(_user_id2, '++1456', 'E_MAIL');
+	return next (select is(_getUserStatus(_user_id2), 'CONFIRMED'
+		, 'Ошибочный ввод кода по мылу не меняет статус - CONFIRMED')); 
+	
+	return next (select * from finish());
+exception when others then
+  get stacked diagnostics _err_txt1 = message_text,
+                          _err_txt2 = table_name,
+                          _err_txt3 = schema_name,
+						  _err_txt4 = pg_exception_context;
+	return next 'Exeption: '|| _err_txt1 ||CHR(13)||'Context: '|| _err_txt4;	
+end;
+$$ language plpgsql;
+*/
+
 \q

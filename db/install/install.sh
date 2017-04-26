@@ -61,3 +61,6 @@ psql -h $db_host -p $db_port -d $db_name -U $db_user \
 
 echo "See logs in $log_path/install.log"
 tail -20 $log_path/install.log
+
+echo "Please execute integration tests. ../tests/run_tests.sh"
+
