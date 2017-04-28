@@ -15,13 +15,15 @@ create type t_prof_list as (
   prof_type varchar
 );
 
-
-drop type if exists en_user_state;
-create type en_user_state as enum ('UNKNOWN', 'CONFIRMED_SINGLE', 'CONFIRMED');	
+/*
+drop type if exists en_user_status;
+create type en_user_status as enum ('UNKNOWN', 'CONFIRMED_SINGLE', 'CONFIRMED', 'ADMIN');	
+-- UNKNOWN          - новый незарегистрированный пользователь  
 -- CONFIRMED_SINGLE - если подтвержден только мэйл
 -- CONFIRMED        - если подтвержден телефон
+-- ADMIN            - администратор системы  
+*/
 
-drop type if exists en_verif_code_type;
-create type en_verif_code_type as enum ('E_MAIL', 'PHONE');	
+--drop type if exists en_verify_code_type;
+--create type en_verify_code_type as enum ('E_MAIL', 'PHONE');	
 
--- user_id := getUserByCode(p_code)

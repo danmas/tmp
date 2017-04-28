@@ -1,9 +1,153 @@
 ﻿/*
 Created: 18.04.2017
-Modified: 26.04.2017
+Modified: 25.04.2017
 Model: Carlink-db-0.1
 Database: PostgreSQL 9.5
 */
+
+
+-- Drop relationships section -------------------------------------------------
+
+ALTER TABLE "carl_auth"."users" DROP CONSTRAINT IF EXISTS "fk_verify_code_users"
+;
+ALTER TABLE "carl_prof"."invitation" DROP CONSTRAINT IF EXISTS "fk_invitation_trade_unit"
+;
+ALTER TABLE "carl_auct"."auction_bid" DROP CONSTRAINT IF EXISTS "fk_bid_profile"
+;
+ALTER TABLE "carl_auct"."auction_bid" DROP CONSTRAINT IF EXISTS "fk_bid_auction"
+;
+ALTER TABLE "carl_prof"."profile" DROP CONSTRAINT IF EXISTS "fk_profile_trade_unit"
+;
+ALTER TABLE "carl_prof"."profile" DROP CONSTRAINT IF EXISTS "fk_profile"
+;
+ALTER TABLE "carl_prof"."trade_unit" DROP CONSTRAINT IF EXISTS "fk_trade_unit_0"
+;
+ALTER TABLE "carl_prof"."trade_unit" DROP CONSTRAINT IF EXISTS "fk_trade_unit_individual"
+;
+ALTER TABLE "carl_prof"."trade_unit" DROP CONSTRAINT IF EXISTS "fk_trade_unit"
+;
+ALTER TABLE "carl_auct"."auction" DROP CONSTRAINT IF EXISTS "fk_auction"
+;
+
+
+
+
+-- Drop keys for tables section -------------------------------------------------
+
+ALTER TABLE "carl_auth"."verify_code" DROP CONSTRAINT IF EXISTS "Key3"
+;
+ALTER TABLE "carl_prof"."invitation" DROP CONSTRAINT IF EXISTS "pk_invitation"
+;
+ALTER TABLE "carl_auth"."users" DROP CONSTRAINT IF EXISTS "pk_users"
+;
+ALTER TABLE "carl_prof"."trade_unit" DROP CONSTRAINT IF EXISTS "pk_trade_unit"
+;
+ALTER TABLE "carl_prof"."profile" DROP CONSTRAINT IF EXISTS "pk_profile"
+;
+ALTER TABLE "carl_auct"."lot" DROP CONSTRAINT IF EXISTS "pk_lot"
+;
+ALTER TABLE "carl_prof"."individual" DROP CONSTRAINT IF EXISTS "pk_individual"
+;
+ALTER TABLE "carl_prof"."corporate" DROP CONSTRAINT IF EXISTS "pk_corporate"
+;
+ALTER TABLE "carl_prof"."corporate" DROP CONSTRAINT IF EXISTS "pk_corporate_0"
+;
+ALTER TABLE "carl_auct"."auction_bid" DROP CONSTRAINT IF EXISTS "Key1"
+;
+ALTER TABLE "carl_auct"."auction_bid" DROP CONSTRAINT IF EXISTS "pk_bid"
+;
+ALTER TABLE "carl_auct"."auction" DROP CONSTRAINT IF EXISTS "pk_auction"
+;
+
+
+-- Drop indexes section -------------------------------------------------
+
+DROP INDEX IF EXISTS "carl_prof"."IX_Relationship5"
+;
+DROP INDEX IF EXISTS "carl_auth"."IX_Relationship1"
+;
+DROP INDEX IF EXISTS "carl_prof"."idx_trade_unit"
+;
+DROP INDEX IF EXISTS "carl_prof"."idx_trade_unit_0"
+;
+DROP INDEX IF EXISTS "carl_prof"."idx_trade_unit_1"
+;
+DROP INDEX IF EXISTS "carl_prof"."idx_profile"
+;
+DROP INDEX IF EXISTS "carl_prof"."idx_profile_0"
+;
+DROP INDEX IF EXISTS "carl_auct"."idx_bid"
+;
+DROP INDEX IF EXISTS "carl_auct"."idx_bid_0"
+;
+DROP INDEX IF EXISTS "carl_auct"."idx_auction"
+;
+
+-- Drop tables section ---------------------------------------------------
+
+DROP TABLE IF EXISTS "carl_auth"."verify_code" CASCADE
+;
+DROP TABLE IF EXISTS "carl_prof"."invitation" CASCADE
+;
+DROP TABLE IF EXISTS "carl_auth"."users" CASCADE
+;
+DROP TABLE IF EXISTS "carl_prof"."trade_unit" CASCADE
+;
+DROP TABLE IF EXISTS "carl_prof"."profile" CASCADE
+;
+DROP TABLE IF EXISTS "carl_auct"."lot" CASCADE
+;
+DROP TABLE IF EXISTS "carl_prof"."individual" CASCADE
+;
+DROP TABLE IF EXISTS "carl_prof"."corporate" CASCADE
+;
+DROP TABLE IF EXISTS "carl_auct"."auction_bid" CASCADE
+;
+DROP TABLE IF EXISTS "carl_auct"."auction" CASCADE
+;
+
+-- Drop user data types section --------------------------------------------------- 
+
+DROP TYPE IF EXISTS "carl_prof"."t_prof_list"
+;
+
+-- Drop schemas section --------------------------------------------------- 
+
+DROP SCHEMA IF EXISTS "carl_auct" CASCADE
+;
+DROP SCHEMA IF EXISTS "carl_comm" CASCADE
+;
+DROP SCHEMA IF EXISTS "carl_prof" CASCADE
+;
+DROP SCHEMA IF EXISTS "carl_auth" CASCADE
+;
+DROP SCHEMA IF EXISTS "public" CASCADE
+;
+DROP SCHEMA IF EXISTS "carl_dev" CASCADE
+;
+
+-- Create schemas section -------------------------------------------------
+
+CREATE SCHEMA "carl_dev" AUTHORIZATION "carl"
+;
+
+CREATE SCHEMA "public" AUTHORIZATION "postgres"
+;
+
+COMMENT ON SCHEMA "public" IS 'standard public schema'
+;
+
+CREATE SCHEMA "carl_auth"
+;
+
+CREATE SCHEMA "carl_prof"
+;
+
+CREATE SCHEMA "carl_comm"
+;
+
+CREATE SCHEMA "carl_auct"
+;
 
 -- Create user data types section -------------------------------------------------
 
@@ -238,6 +382,7 @@ CREATE TABLE "carl_auth"."users"(
  "phone" Varchar,
  "status" Character varying(50) DEFAULT 'UNKNOWN'::character varying NOT NULL,
  "password_hash" Character varying(255) DEFAULT '$2y$10$1qaz2wsx3edc4rfv5tgb6uPqXjlGqJ9xUzpN5InbzS49xXsE.T9E2' NOT NULL,
+ "verify_code_id" Integer,
  "is_deleted" Character varying(1) DEFAULT 'N'::character varying NOT NULL,
  "is_blocked" Character varying(1) DEFAULT 'N'::character varying NOT NULL,
  "bad_pass_count" Integer DEFAULT 0,
@@ -264,6 +409,8 @@ ALTER TABLE "carl_auth"."users" ALTER COLUMN "phone" SET STORAGE EXTENDED
 ALTER TABLE "carl_auth"."users" ALTER COLUMN "status" SET STORAGE EXTENDED
 ;
 ALTER TABLE "carl_auth"."users" ALTER COLUMN "password_hash" SET STORAGE EXTENDED
+;
+ALTER TABLE "carl_auth"."users" ALTER COLUMN "verify_code_id" SET STORAGE PLAIN
 ;
 ALTER TABLE "carl_auth"."users" ALTER COLUMN "is_deleted" SET STORAGE EXTENDED
 ;
@@ -300,6 +447,8 @@ COMMENT ON COLUMN "carl_auth"."users"."status" IS 'Статус UNKNOWN, CONFIRM
 ;
 COMMENT ON COLUMN "carl_auth"."users"."password_hash" IS 'Зашифрованный пароль'
 ;
+COMMENT ON COLUMN "carl_auth"."users"."verify_code_id" IS 'Код отправленный по электронной почте'
+;
 COMMENT ON COLUMN "carl_auth"."users"."is_deleted" IS 'Признак того, что пользователь удален Y/N'
 ;
 COMMENT ON COLUMN "carl_auth"."users"."is_blocked" IS 'Признак блокировки Y/N'
@@ -317,6 +466,11 @@ COMMENT ON COLUMN "carl_auth"."users"."last_ip" IS 'IP последнего вх
 COMMENT ON COLUMN "carl_auth"."users"."last_session_id" IS 'ID последней сессии'
 ;
 COMMENT ON COLUMN "carl_auth"."users"."locale" IS 'Локализация'
+;
+
+-- Create indexes for table carl_auth.users
+
+CREATE INDEX "IX_Relationship1" ON "carl_auth"."users" ("verify_code_id")
 ;
 
 -- Add keys for table carl_auth.users
@@ -361,8 +515,7 @@ ALTER TABLE "carl_prof"."invitation" ADD CONSTRAINT "pk_invitation" PRIMARY KEY 
 
 CREATE TABLE "carl_auth"."verify_code"(
  "id" Serial NOT NULL,
- "user_id" Integer,
- "code_type" Varchar,
+ "type" Varchar,
  "code" Varchar,
  "dt_send" Timestamp DEFAULT current_timestamp,
  "code_received" Varchar,
@@ -372,9 +525,7 @@ CREATE TABLE "carl_auth"."verify_code"(
 
 COMMENT ON TABLE "carl_auth"."verify_code" IS 'Коды верификации'
 ;
-COMMENT ON COLUMN "carl_auth"."verify_code"."user_id" IS 'id пользователя'
-;
-COMMENT ON COLUMN "carl_auth"."verify_code"."code_type" IS 'Тип кода. Сейчас реализовано: ''E_MAIL'',''PHONE'''
+COMMENT ON COLUMN "carl_auth"."verify_code"."type" IS 'Тип кода. Сейчас реализовано: ''E_MAIL'',''PHONE'''
 ;
 COMMENT ON COLUMN "carl_auth"."verify_code"."code" IS 'Отправленный пользователю код'
 ;
@@ -385,32 +536,9 @@ COMMENT ON COLUMN "carl_auth"."verify_code"."code_received" IS 'Последни
 COMMENT ON COLUMN "carl_auth"."verify_code"."dt_received" IS 'Дата получения от пользователя'
 ;
 
--- Create indexes for table carl_auth.verify_code
-
-CREATE INDEX "IX_Relationship2" ON "carl_auth"."verify_code" ("user_id")
-;
-
 -- Add keys for table carl_auth.verify_code
 
-ALTER TABLE "carl_auth"."verify_code" ADD CONSTRAINT "pk_verify_code" PRIMARY KEY ("id")
-;
-
--- Table carl_comm.message
-
-CREATE TABLE "carl_comm"."message"(
- "code" Varchar NOT NULL,
- "locale" Varchar DEFAULT 'RU' NOT NULL,
- "text" Varchar NOT NULL
-)
-;
-
-COMMENT ON TABLE "carl_comm"."message" IS 'Сообщения системы'
-;
-COMMENT ON COLUMN "carl_comm"."message"."code" IS 'Код сообщения '
-;
-COMMENT ON COLUMN "carl_comm"."message"."locale" IS 'Локализация'
-;
-COMMENT ON COLUMN "carl_comm"."message"."text" IS 'Сообщение'
+ALTER TABLE "carl_auth"."verify_code" ADD CONSTRAINT "Key3" PRIMARY KEY ("id")
 ;
 
 -- Create relationships section ------------------------------------------------- 
@@ -442,7 +570,7 @@ ALTER TABLE "carl_auct"."auction_bid" ADD CONSTRAINT "fk_bid_profile" FOREIGN KE
 ALTER TABLE "carl_prof"."invitation" ADD CONSTRAINT "fk_invitation_trade_unit" FOREIGN KEY ("trade_unit_id") REFERENCES "carl_prof"."trade_unit" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
 ;
 
-ALTER TABLE "carl_auth"."verify_code" ADD CONSTRAINT "fk_verif_code_users" FOREIGN KEY ("user_id") REFERENCES "carl_auth"."users" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
+ALTER TABLE "carl_auth"."users" ADD CONSTRAINT "fk_verify_code_users" FOREIGN KEY ("verify_code_id") REFERENCES "carl_auth"."verify_code" ("id") ON DELETE CASCADE ON UPDATE NO ACTION
 ;
 
 

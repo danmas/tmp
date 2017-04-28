@@ -101,7 +101,7 @@ as $$
 declare
   ret int;
 begin
-  select individual_id into ret from trade_unit where admin_user_id = p_user_id
+  select individual_id into ret from trade_unit where owner_user_id = p_user_id
 	and individual_id is not null;
   -- raise notice 'id for email "%" is "%"', p_email, v;
   return ret;
@@ -122,7 +122,7 @@ as $$
 declare
   ret int;
 begin
-  select admin_user_id into ret from trade_unit where individual_id = p_indiv_id;
+  select owner_user_id into ret from trade_unit where individual_id = p_indiv_id;
   -- raise notice 'id for email "%" is "%"', p_email, v;
   return ret;
 exception
@@ -139,7 +139,7 @@ $$ language plpgsql;
 --  Пример: select createNewCorporate(getUserIdByEmail('email1'),'Звездолёты Инк', '7324598745630496', 'OGRN7856763');
 ----------------------------------------------------------------------------------
 drop function if exists createNewCorporate(int, text, text, text, text);
-create or replace function createNewCorporate(p_admin_user_id int, p_name text
+create or replace function createNewCorporate(p_owner_user_id int, p_name text
     , p_inn text default null, p_ogrn text default null, p_kpp text default null) returns int
 as $$
 declare
@@ -156,11 +156,11 @@ begin
   raise notice 'Создано юр.лицо "%" с id "%"', p_name, ret;
 
   -- создается торговая единица и профиль для администратора
-  insert into trade_unit(admin_user_id, corporate_id/*, balance_summ*/) VALUES (
-	p_admin_user_id, ret/*, 0*/ ) 
+  insert into trade_unit(owner_user_id, corporate_id/*, balance_summ*/) VALUES (
+	p_owner_user_id, ret/*, 0*/ ) 
     returning id into tuid;
   insert into profile(user_id, trade_unit_id) VALUES 
-    (p_admin_user_id, tuid);
+    (p_owner_user_id, tuid);
   raise notice 'Торговый профиль юр.лица %', p_name || ' создан.';	
   return ret;
 end
@@ -221,7 +221,7 @@ declare
   tuid int;
 begin
   -- raise notice '---------------------------------------------------------------';
-  select count(*) into cnt from trade_unit where admin_user_id = p_user_id
+  select count(*) into cnt from trade_unit where owner_user_id = p_user_id
 	and individual_id is not null;
   if(cnt != 0) then
     raise exception 'Уже существет физ.лицо для этого пользователя.';
@@ -231,7 +231,7 @@ begin
   raise notice 'Для пользователя с % создано физ.лицо с id "%"', p_user_id, ret;
 
   -- создается торговая единица и профиль 
-  insert into trade_unit(admin_user_id, individual_id/*, balanсe_summ*/) VALUES (p_user_id, ret/*, 0*/ ) 
+  insert into trade_unit(owner_user_id, individual_id/*, balanсe_summ*/) VALUES (p_user_id, ret/*, 0*/ ) 
     returning id into tuid;
   insert into profile(user_id, trade_unit_id) VALUES (p_user_id, tuid);
 	
@@ -433,7 +433,7 @@ begin
 	select count(*) into cnt from users where email = p_email;
 	if(cnt != 0) then
 		-- raise 'Уже существет пользователь с таким е-мэйлом %', p_email USING ERRCODE = 'unique_violation';
-		raise exception using message=getMessage('ALREADY_EXIST_USER_WITH_E_MAIL'), ERRCODE = 'unique_violation';
+		raise exception using message=_getMessage('ALREADY_EXIST_USER_WITH_E_MAIL'), ERRCODE = 'unique_violation';
 	end if;
   end if;
 
@@ -441,7 +441,7 @@ begin
 	select count(*) into cnt from users where phone = p_phone;
 	if(cnt != 0) then
 		-- raise 'Уже существет пользователь с таким таким номером телефона %', p_phone USING ERRCODE = 'unique_violation';
-		raise exception using message=getMessage('ALREADY_EXIST_USER_WITH_PHONE'), ERRCODE = 'unique_violation';
+		raise exception using message=_getMessage('ALREADY_EXIST_USER_WITH_PHONE'), ERRCODE = 'unique_violation';
 	end if;
   end if;
   
@@ -465,14 +465,14 @@ $$ language plpgsql;
 --  Пример: setEmailVerifCode(_user_id,'123456','E_MAIL');
 --          setEmailVerifCode(_user_id,'123456','PHONE'); 
 ----------------------------------------------------------------------------------
-drop function if exists carl_auth.setVerifCode(int, varchar, varchar);
-create or replace function carl_auth.setVerifCode(p_user_id int, p_code varchar, p_code_type varchar) returns void
+drop function if exists    carl_auth.setVerifyCode(int, varchar, varchar);
+create or replace function carl_auth.setVerifyCode(p_user_id int, p_code varchar, p_code_type varchar) returns void
 as $$
 declare
 	_id    int;
 	_cnt   int;
 	_vc_id int;
-	_ct    en_verif_code_type;
+	_ct    en_verify_code_type;
 	_err_txt1 text;
 	_err_txt2 text;
 	_err_txt3 text;	
@@ -480,28 +480,35 @@ declare
 begin
 
 	begin
-		_ct = p_code_type::en_verif_code_type;
+		_ct = p_code_type::en_verify_code_type;
 	exception when others then
-		raise exception using message=getMessage('VERIFY_CODE_BAD_TYPE')||p_code_type;
+		raise exception using message=_getMessage('VERIFY_CODE_BAD_TYPE')||p_code_type;
 	end;
 
+	delete from verify_code where user_id = p_user_id 
+		and code_type::varchar = p_code_type;
+	
+	select count(*) into _cnt from verify_code where user_id = p_user_id
+		and code = p_code; 
+	
+	if(_cnt != 0) then
+		raise exception using message=_getMessage('VERIFY_CODE_DUPLICATE');
+	end if;
+	
 	select id into _vc_id from verify_code where user_id = p_user_id 
 		and code_type::varchar = p_code_type;
 		
-	if(_vc_id is null) then
-		insert into verify_code (code_type, code, user_id) values 
-			(p_code_type::en_verif_code_type, p_code, p_user_id) returning id into _id;
-	else
-		update verify_code set code = p_code, code_received = null, dt_received = null
-			where id = _vc_id;
-	end if;
-exception when others then	
+	insert into verify_code (code_type, code, user_id) values 
+			(p_code_type::en_verify_code_type, p_code, p_user_id) returning id into _id;
+
+/*exception when others then	
   get stacked diagnostics _err_txt1 = message_text,
                           _err_txt2 = table_name,
                           _err_txt3 = schema_name,
 						  _err_txt4 = pg_exception_context;
 		raise exception using message=_err_txt1;
 	return;
+	*/
 end
 $$ language plpgsql;
 	
@@ -524,15 +531,12 @@ begin
 end;
 */	
 
--- checkVerifyCode
 ----------------------------------------------------------------------------------
 --  Проверка кода подтверждения отправленного ранее.
 --  Параметры:   p_user_id - id пользователя, p_code - код
---             , p_code_type - тип кода верификации ('E_MAIL' или 'PHONE')
 --  Возвращвет 'Y' - если промо код совпадает и "не протух" 
---  Исключения: выбрасывается исключение в случае ошибок (см выше), 
---                    если p_code null или '' - "Неверно задан промо код"       
---  Пример: _ans = _isVerifCodeCorrect(_user_id,'123456','E_MAIL');
+--  Исключения: выбрасывается исключения: VERIFY_CODE_NOT_FOUND, VERIFY_CODE_TIMEOUT
+--  Пример: _ans := checkVerifyCode(_user_id,'123456');
 ----------------------------------------------------------------------------------
 drop function if exists    carl_auth.checkVerifyCode(int, varchar);
 create or replace function carl_auth.checkVerifyCode(p_user_id int, p_code varchar) returns varchar(1) 
@@ -543,7 +547,7 @@ declare
 	_s         varchar;
 	--_code_type varchar;
 	_ans       varchar;
-	--_ct      en_verif_code_type;
+	--_ct      en_verify_code_type;
 begin
     select code, dt_send  into _m_code, _m_dt_send from verify_code vc
         where vc.user_id = p_user_id
@@ -553,7 +557,7 @@ begin
                 and vc.code_type::varchar = 'PHONE';
 		
 	if(_p_code is null and _m_code is null) then
-		raise exception using message=getMessage('VERIFY_CODE_NOT_FOUND');
+		raise exception using message=_getMessage('VERIFY_CODE_NOT_FOUND');
 	end if;	
 	
 	if(_p_code is not null and _p_code = p_code ) then
@@ -561,61 +565,48 @@ begin
 		if(_ans = 'Y') then 
 			return 'Y';
 		elsif(_ans = 'TIMEOUT') then 
-			raise exception using message=getMessage('VERIFY_CODE_TIMEOUT');
+			raise exception using message=_getMessage('VERIFY_CODE_TIMEOUT');
 		end if;
 	elsif(_m_code is not null and _m_code = p_code ) then
 		_ans := _isVerifCodeCorrect(p_user_id, p_code, _m_code, 'E_MAIL', _m_dt_send);
 		if(_ans = 'Y') then 
 			return 'Y';
 		elsif(_ans = 'TIMEOUT') then 
-			raise exception using message=getMessage('VERIFY_CODE_TIMEOUT');
+			raise exception using message=_getMessage('VERIFY_CODE_TIMEOUT');
 		end if;
 	end if;
 	return 'N';
 end
 $$ language plpgsql;
 	
-	
 
 
 ----------------------------------------------------------------------------------
 --  Проверка кода подтверждения отправленного ранее.
 --  Параметры:   p_user_id - id пользователя, p_code - код
+--             , p_code - код для проверки
+--             , p_indb_code - код из базы
 --             , p_code_type - тип кода верификации ('E_MAIL' или 'PHONE')
+--             , p_dt_send - дата отправки кода
 --  Возвращвет 'Y' - если промо код совпадает и "не протух" 
 --             'TIMEOUT' - если протух
 --  Исключения: 
 --  Пример: _ans = _isVerifCodeCorrect(_user_id,'123456','E_MAIL');
 ----------------------------------------------------------------------------------
-drop function if exists carl_auth._isVerifCodeCorrect(int, varchar, varchar, varchar, timestamp);
+drop function if exists    carl_auth._isVerifCodeCorrect(int, varchar, varchar, varchar, timestamp);
 create or replace function carl_auth._isVerifCodeCorrect(p_user_id int
 	, p_code varchar, p_indb_code varchar, p_code_type varchar, p_dt_send timestamp) returns varchar(1) 
 as $$
 declare
 	_s       varchar;
-	-- _ct      en_verif_code_type;
+	-- _ct      en_verify_code_type;
 begin
-/*
-	begin
-		_ct = p_code_type::en_verif_code_type;
-	exception when others then
-		raise exception using message=getMessage('VERIFY_CODE_BAD_TYPE')||p_code_type;
-	end;
-	-- есть код?
-	select vc.code, vc.dt_send into _code, _dt_send from verify_code vc where vc.user_id = p_user_id
-		and vc.code_type::varchar = p_code_type;
-	-- raise notice '_code %',_code;	
-	if(_code is null) then
-		--raise exception 'Не найден код подтверждения. Код не был отправлен?';
-		raise exception using message=getMessage('VERIFY_CODE_NOT_FOUND');
-	end if;	*/
 	-- не "протух"?
 	if(p_dt_send < (now() - interval '24 hours')) then
-		-- raise exception 'Превышено время ожидания кода подтверждения.';
-		return 'TIMEOUT'; --
+		return 'TIMEOUT'; 
 	end if;
 	-- совпадает?
-	if(p_code = p_indb_code) then
+	--if(p_code = p_indb_code) then
 		-- записываем время получения
 		update verify_code vc set dt_received=now() where vc.user_id = p_user_id
 			and vc.code_type::varchar = p_code_type;
@@ -627,18 +618,20 @@ begin
 			update users set status = 'CONFIRMED_SINGLE' where id = p_user_id and status = 'UNKNOWN';
 		end if;
 		return 'Y';
-	else
-		-- записываем последний (неверный код) и время получения
-		update verify_code vc set dt_received=now(), code_received=p_code where vc.user_id = p_user_id
-			and vc.code_type::varchar = p_code_type;
-		return 'N';
-	end if;	
+	--else
+	--	raise notice '++++++++++++++++++++++++++++++++++++++++++'; 
+	--	-- записываем последний (неверный код) и время получения
+	--	update verify_code vc set dt_received=now(), code_received=p_code where vc.user_id = p_user_id
+	--		and vc.code_type::varchar = p_code_type;
+	--	return 'N';
+	-- end if;	
 end
 $$ language plpgsql;
 
 	
-	
+/*	
 ----------------------------------------------------------------------------------
+--  DEPRICATED
 --  Проверка кода подтверждения отправленного ранее.
 --  Параметры:   p_user_id - id пользователя, p_code - код
 --             , p_code_type - тип кода верификации ('E_MAIL' или 'PHONE')
@@ -646,7 +639,6 @@ $$ language plpgsql;
 --  Исключения: выбрасывается исключение в случае ошибок (см выше), 
 --                    если p_code null или '' - "Неверно задан промо код"       
 --  Пример: _ans = _isVerifCodeCorrect(_user_id,'123456','E_MAIL');
---  DEPRICATED
 ----------------------------------------------------------------------------------
 create or replace function carl_auth._isVerifCodeCorrect_OLD(p_user_id int
 	, p_code varchar, p_code_type varchar) returns varchar(1) 
@@ -655,12 +647,12 @@ declare
 	_code    varchar;
 	_dt_send timestamp;
 	_s       varchar;
-	_ct      en_verif_code_type;
+	_ct      en_verify_code_type;
 begin
 	begin
-		_ct = p_code_type::en_verif_code_type;
+		_ct = p_code_type::en_verify_code_type;
 	exception when others then
-		raise exception using message=getMessage('VERIFY_CODE_BAD_TYPE')||p_code_type;
+		raise exception using message=_getMessage('VERIFY_CODE_BAD_TYPE')||p_code_type;
 	end;
 	-- есть код?
 	select vc.code, vc.dt_send into _code, _dt_send from verify_code vc where vc.user_id = p_user_id
@@ -668,12 +660,12 @@ begin
 	-- raise notice '_code %',_code;	
 	if(_code is null) then
 		--raise exception 'Не найден код подтверждения. Код не был отправлен?';
-		raise exception using message=getMessage('VERIFY_CODE_NOT_FOUND');
+		raise exception using message=_getMessage('VERIFY_CODE_NOT_FOUND');
 	end if;	
 	-- не "протух"?
 	if(_dt_send < (now() - interval '24 hours')) then
 		-- raise exception 'Превышено время ожидания кода подтверждения.';
-		raise exception using message=getMessage('VERIFY_CODE_TIMEOUT');
+		raise exception using message=_getMessage('VERIFY_CODE_TIMEOUT');
 	end if;
 	-- совпадает?
 	if(p_code = _code) then
@@ -696,7 +688,7 @@ begin
 	end if;	
 end
 $$ language plpgsql;
-	
+*/	
 	
 ----------------------------------------------------------------------------------
 -- Получение статуса пользователя
@@ -713,11 +705,11 @@ $$ language plpgsql;
 
 	
 ----------------------------------------------------------------------------------
+--  NOT USED
 --  Выставляет статус пользователя
 --  Возвращвет: 
 --  Исключения: 
 --  Пример: setUserStatus(_user_id,'GUEST');
---  NOT USED
 ----------------------------------------------------------------------------------
 create or replace function carl_auth._setUserStatus(p_user_id int, p_status varchar) returns void
 as $$
@@ -733,9 +725,9 @@ $$ language plpgsql;
 --  Запись сообщения системы для кода и локализации
 --  Возвращвет: текст сообщения
 --  Исключения: выбрасывается исключение в случае ошибок
---  Пример: setMessage('NO_MESSAGE_FOR_CODE','Нет собщения для кода %','RU');
+--  Пример: _setMessage('NO_MESSAGE_FOR_CODE','Нет собщения для кода %','RU');
 ----------------------------------------------------------------------------------
-create or replace function carl_comm.setMessage(p_code varchar
+create or replace function carl_comm._setMessage(p_code varchar
 	, p_text varchar, p_locale varchar default 'RU') returns void
 as $$
 declare
@@ -764,9 +756,9 @@ $$ language plpgsql;
 --  Возвращвет: текст сообщения
 --  Исключения: выбрасывается исключение в случае ошибок, 
 --                  "Нет собщения для кода %"
---  Пример: getMessage('NO_MESSAGE_FOR_CODE','RU');
+--  Пример: _getMessage('NO_MESSAGE_FOR_CODE','RU');
 ----------------------------------------------------------------------------------
-create or replace function carl_comm.getMessage(p_code varchar, p_locale varchar default 'RU') returns text
+create or replace function carl_comm._getMessage(p_code varchar, p_locale varchar default 'RU') returns text
 as $$
 declare
 	_text varchar;
@@ -781,6 +773,97 @@ $$ language plpgsql;
 
 
 ----------------------------------------------------------------------------------
+--  Добавление роли торговому профилю по profile.id 
+--  Возвращает: 
+--  Исключения: выбрасывается исключение 
+--  Пример: 
+----------------------------------------------------------------------------------
+drop function if exists    carl_prof.addRole(int, varchar);	
+create or replace function carl_prof.addRole(p_prof_id int, p_role varchar) returns void
+as $$
+declare
+	_r en_role;
+begin
+	_r := p_role;
+	update trade_unit set roles = array_remove(roles,_r) || _r 
+		from (select trade_unit_id from profile where profile.id = p_prof_id ) as p
+			where trade_unit.id = p.trade_unit_id;
+end
+$$ language plpgsql;
+
+
+
+----------------------------------------------------------------------------------
+--  Удаление роли торгового профиля по profile.id 
+--  Возвращвет: 
+--  Исключения: выбрасывается исключение 
+--  Пример: 
+----------------------------------------------------------------------------------
+drop function if exists    carl_prof.removeRole(int, varchar);	
+create or replace function carl_prof.removeRole(p_prof_id int, p_role varchar) returns void
+as $$
+declare
+	_r en_role;
+begin
+	_r := p_role;
+	update trade_unit set roles = array_remove(roles,_r)
+		from (select trade_unit_id from profile where profile.id = p_prof_id ) as p
+			where trade_unit.id = p.trade_unit_id;
+end
+$$ language plpgsql;
+
+
+----------------------------------------------------------------------------------
+--  Проверка наличия роли для торгового профиляprofile.id 
+--  Возвращвет: Y - роль есть N - нет
+--  Исключения: выбрасывается исключение 
+--  Пример: 
+----------------------------------------------------------------------------------
+drop function if exists carl_prof.hasRole(int, varchar);	
+create or replace function carl_prof.hasRole(p_prof_id int, p_role varchar) returns varchar(1)
+as $$
+declare
+	_cnt int;
+	_r en_role;
+begin
+	_r := p_role;
+	
+	select  cardinality(array_positions(roles,_r)) into _cnt from trade_unit tu
+		inner join profile p on (tu.id = p.trade_unit_id)
+		where p.id = p_prof_id;
+	
+	if(_cnt = 0) then
+		return 'N';
+	else
+		return 'Y';
+	end if;	
+end
+$$ language plpgsql;
+
+
+----------------------------------------------------------------------------------
+--  Получение списка ролей для торгового профиляprofile.id 
+--  Возвращвет: список ролей строкой с разделителем ','
+--  Исключения: выбрасывается исключение 
+--  Пример: 
+----------------------------------------------------------------------------------
+drop function if exists    carl_prof.getRoleList(int);	
+create or replace function carl_prof.getRoleList(p_prof_id int) returns varchar
+as $$
+declare
+	_ret varchar;
+begin
+	
+	select array_to_string(roles,',') into _ret from trade_unit tu 
+		inner join profile p on (tu.id = p.trade_unit_id)
+		where p.id = p_prof_id;
+
+	return _ret;	
+end
+$$ language plpgsql;
+
+
+----------------------------------------------------------------------------------
 --  Генерация последовательности случайных букв
 --  Возвращвет: текст сообщения
 --  Исключения: 
@@ -791,13 +874,14 @@ create or replace function carl_comm.random_text(len integer) returns text as $$
 $$ language sql;
 
 
-select setMessage('NO_MESSAGE_FOR_CODE','Нет собщения для кода %','RU');
-select setMessage('VERIFY_CODE_NOT_FOUND','Не найден код подтверждения. Код не был отправлен?');	
-select setMessage('VERIFY_CODE_TIMEOUT','Превышено время ожидания кода подтверждения.');	
-select setMessage('VERIFY_CODE_BAD_TYPE','Неверный тип кода верификации: ');
+select _setMessage('NO_MESSAGE_FOR_CODE','Нет собщения для кода %','RU');
+select _setMessage('VERIFY_CODE_NOT_FOUND','Не найден код подтверждения. Код не был отправлен?');	
+select _setMessage('VERIFY_CODE_TIMEOUT','Превышено время ожидания кода подтверждения.');	
+select _setMessage('VERIFY_CODE_BAD_TYPE','Неверный тип кода верификации: ');
+select _setMessage('VERIFY_CODE_DUPLICATE','Для данного пользователя уже существует такой же кода верификации другого типа. ');
 
-select setMessage('ALREADY_EXIST_USER_WITH_E_MAIL','Уже существет пользователь с таким е-мэйлом.');
-select setMessage('ALREADY_EXIST_USER_WITH_PHONE','Уже существет пользователь с таким таким номером телефона.');
+select _setMessage('ALREADY_EXIST_USER_WITH_E_MAIL','Уже существет пользователь с таким е-мэйлом.');
+select _setMessage('ALREADY_EXIST_USER_WITH_PHONE','Уже существет пользователь с таким таким номером телефона.');
 
 /*--------------------------------------------------------------------------------
 	exception

@@ -1,6 +1,6 @@
 ﻿/*
 Created: 18.04.2017
-Modified: 26.04.2017
+Modified: 27.04.2017
 Model: Carlink-db-0.1
 Database: PostgreSQL 9.5
 */
@@ -388,6 +388,9 @@ COMMENT ON COLUMN "carl_auth"."verify_code"."dt_received" IS 'Дата полу�
 -- Create indexes for table carl_auth.verify_code
 
 CREATE INDEX "IX_Relationship2" ON "carl_auth"."verify_code" ("user_id")
+;
+
+CREATE UNIQUE INDEX "Index1" ON "carl_auth"."verify_code" ("code_type","user_id")
 ;
 
 -- Add keys for table carl_auth.verify_code

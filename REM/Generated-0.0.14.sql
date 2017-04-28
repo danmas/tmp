@@ -1,6 +1,6 @@
 ﻿/*
 Created: 18.04.2017
-Modified: 26.04.2017
+Modified: 28.04.2017
 Model: Carlink-db-0.1
 Database: PostgreSQL 9.5
 */
@@ -9,6 +9,29 @@ Database: PostgreSQL 9.5
 
 CREATE TYPE "carl_prof"."t_prof_list" AS
  ( "prof_id" int4, "user_name" varchar, "is_active" varchar, "corp_name" varchar, "prof_type" varchar )
+;
+
+CREATE TYPE "en_role" AS ENUM
+ ( 'subscriber','buyer','seller' )
+;
+
+COMMENT ON TYPE "en_role" IS 'Роли торговых профилей'
+;
+
+CREATE TYPE "en_user_state" AS ENUM
+ ( 'UNKNOWN', 'CONFIRMED_SINGLE', 'CONFIRMED', 'ADMIN' )
+;
+
+COMMENT ON TYPE "en_user_state" IS 'UNKNOWN          - новый незарегистрированный пользователь , CONFIRMED_SINGLE - если подтвержден только мэйл, CONFIRMED        - если подтвержден телефон
+, ADMIN            - администратор системы  
+'
+;
+
+CREATE TYPE "en_verify_code_type" AS ENUM
+ ( 'E_MAIL', 'PHONE' )
+;
+
+COMMENT ON TYPE "en_verify_code_type" IS 'Типы кодов подтверждения'
 ;
 
 -- Create tables section -------------------------------------------------
@@ -185,9 +208,10 @@ CREATE TABLE "carl_prof"."trade_unit"(
  "id" Serial NOT NULL,
  "corporate_id" Integer,
  "individual_id" Integer,
+ "owner_user_id" Integer NOT NULL,
  "balance_summ" Numeric(10,2),
  "is_active" Character varying(1) DEFAULT 'N'::character varying,
- "admin_user_id" Integer
+ "roles" "en_role"[]
 )
 ;
 ALTER TABLE "carl_prof"."trade_unit" ALTER COLUMN "id" SET STORAGE PLAIN
@@ -196,11 +220,11 @@ ALTER TABLE "carl_prof"."trade_unit" ALTER COLUMN "corporate_id" SET STORAGE PLA
 ;
 ALTER TABLE "carl_prof"."trade_unit" ALTER COLUMN "individual_id" SET STORAGE PLAIN
 ;
+ALTER TABLE "carl_prof"."trade_unit" ALTER COLUMN "owner_user_id" SET STORAGE PLAIN
+;
 ALTER TABLE "carl_prof"."trade_unit" ALTER COLUMN "balance_summ" SET STORAGE MAIN
 ;
 ALTER TABLE "carl_prof"."trade_unit" ALTER COLUMN "is_active" SET STORAGE EXTENDED
-;
-ALTER TABLE "carl_prof"."trade_unit" ALTER COLUMN "admin_user_id" SET STORAGE PLAIN
 ;
 
 COMMENT ON TABLE "carl_prof"."trade_unit" IS 'Обобщенная сущность для юр и физ лиц
@@ -208,7 +232,11 @@ COMMENT ON TABLE "carl_prof"."trade_unit" IS 'Обобщенная сущнос�
 
 '
 ;
+COMMENT ON COLUMN "carl_prof"."trade_unit"."owner_user_id" IS 'Пользователь являющийся распорядителем торгового профиля'
+;
 COMMENT ON COLUMN "carl_prof"."trade_unit"."is_active" IS 'Признак того включен или выключен данный профиль.'
+;
+COMMENT ON COLUMN "carl_prof"."trade_unit"."roles" IS 'Список ролей торгового профиля'
 ;
 
 -- Create indexes for table carl_prof.trade_unit
@@ -219,7 +247,7 @@ CREATE INDEX "idx_trade_unit" ON "carl_prof"."trade_unit" ("corporate_id")
 CREATE INDEX "idx_trade_unit_0" ON "carl_prof"."trade_unit" ("individual_id")
 ;
 
-CREATE INDEX "idx_trade_unit_1" ON "carl_prof"."trade_unit" ("admin_user_id")
+CREATE INDEX "idx_trade_unit_1" ON "carl_prof"."trade_unit" ("owner_user_id")
 ;
 
 -- Add keys for table carl_prof.trade_unit
@@ -236,7 +264,7 @@ CREATE TABLE "carl_auth"."users"(
  "last_name" Character varying(255),
  "email" Varchar,
  "phone" Varchar,
- "status" Character varying(50) DEFAULT 'UNKNOWN'::character varying NOT NULL,
+ "status" Varchar,
  "password_hash" Character varying(255) DEFAULT '$2y$10$1qaz2wsx3edc4rfv5tgb6uPqXjlGqJ9xUzpN5InbzS49xXsE.T9E2' NOT NULL,
  "is_deleted" Character varying(1) DEFAULT 'N'::character varying NOT NULL,
  "is_blocked" Character varying(1) DEFAULT 'N'::character varying NOT NULL,
@@ -296,7 +324,7 @@ COMMENT ON COLUMN "carl_auth"."users"."email" IS 'Электронный адр�
 ;
 COMMENT ON COLUMN "carl_auth"."users"."phone" IS 'Мобильный телефон'
 ;
-COMMENT ON COLUMN "carl_auth"."users"."status" IS 'Статус UNKNOWN, CONFIRMED_SINGLE, CONFIRMED'
+COMMENT ON COLUMN "carl_auth"."users"."status" IS 'Статус пользователя'
 ;
 COMMENT ON COLUMN "carl_auth"."users"."password_hash" IS 'Зашифрованный пароль'
 ;
@@ -390,6 +418,9 @@ COMMENT ON COLUMN "carl_auth"."verify_code"."dt_received" IS 'Дата полу�
 CREATE INDEX "IX_Relationship2" ON "carl_auth"."verify_code" ("user_id")
 ;
 
+CREATE UNIQUE INDEX "Index1" ON "carl_auth"."verify_code" ("code_type","user_id")
+;
+
 -- Add keys for table carl_auth.verify_code
 
 ALTER TABLE "carl_auth"."verify_code" ADD CONSTRAINT "pk_verify_code" PRIMARY KEY ("id")
@@ -424,7 +455,7 @@ ALTER TABLE "carl_prof"."trade_unit" ADD CONSTRAINT "fk_trade_unit" FOREIGN KEY 
 ALTER TABLE "carl_prof"."trade_unit" ADD CONSTRAINT "fk_trade_unit_individual" FOREIGN KEY ("individual_id") REFERENCES "carl_prof"."individual" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION
 ;
 
-ALTER TABLE "carl_prof"."trade_unit" ADD CONSTRAINT "fk_trade_unit_0" FOREIGN KEY ("admin_user_id") REFERENCES "carl_auth"."users" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION
+ALTER TABLE "carl_prof"."trade_unit" ADD CONSTRAINT "fk_trade_unit_0" FOREIGN KEY ("owner_user_id") REFERENCES "carl_auth"."users" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION
 ;
 
 ALTER TABLE "carl_prof"."profile" ADD CONSTRAINT "fk_profile" FOREIGN KEY ("user_id") REFERENCES "carl_auth"."users" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION

@@ -1,9 +1,23 @@
 ﻿/*
 Created: 18.04.2017
-Modified: 26.04.2017
+Modified: 25.04.2017
 Model: Carlink-db-0.1
 Database: PostgreSQL 9.5
 */
+
+-- Create schemas section -------------------------------------------------
+
+CREATE SCHEMA "carl_auth"
+;
+
+CREATE SCHEMA "carl_prof"
+;
+
+CREATE SCHEMA "carl_comm"
+;
+
+CREATE SCHEMA "carl_auct"
+;
 
 -- Create user data types section -------------------------------------------------
 
@@ -362,7 +376,8 @@ ALTER TABLE "carl_prof"."invitation" ADD CONSTRAINT "pk_invitation" PRIMARY KEY 
 CREATE TABLE "carl_auth"."verify_code"(
  "id" Serial NOT NULL,
  "user_id" Integer,
- "code_type" Varchar,
+ "type" Varchar
+        CONSTRAINT "CheckType" CHECK (type in ('E_MAIL','PHONE')),
  "code" Varchar,
  "dt_send" Timestamp DEFAULT current_timestamp,
  "code_received" Varchar,
@@ -374,7 +389,7 @@ COMMENT ON TABLE "carl_auth"."verify_code" IS 'Коды верификации'
 ;
 COMMENT ON COLUMN "carl_auth"."verify_code"."user_id" IS 'id пользователя'
 ;
-COMMENT ON COLUMN "carl_auth"."verify_code"."code_type" IS 'Тип кода. Сейчас реализовано: ''E_MAIL'',''PHONE'''
+COMMENT ON COLUMN "carl_auth"."verify_code"."type" IS 'Тип кода. Сейчас реализовано: ''E_MAIL'',''PHONE'''
 ;
 COMMENT ON COLUMN "carl_auth"."verify_code"."code" IS 'Отправленный пользователю код'
 ;
@@ -392,7 +407,7 @@ CREATE INDEX "IX_Relationship2" ON "carl_auth"."verify_code" ("user_id")
 
 -- Add keys for table carl_auth.verify_code
 
-ALTER TABLE "carl_auth"."verify_code" ADD CONSTRAINT "pk_verify_code" PRIMARY KEY ("id")
+ALTER TABLE "carl_auth"."verify_code" ADD CONSTRAINT "Key3" PRIMARY KEY ("id")
 ;
 
 -- Table carl_comm.message

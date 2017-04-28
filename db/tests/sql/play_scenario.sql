@@ -123,29 +123,6 @@ select info();
 СЭ - админ, физик
 */
 
-SELECT p.id as prof_id, getUserSmartName(p.user_id) as user
-	, p.is_active is_active, c.name, 
-	case when i.id is not null then 'Физ.лицо' else 'Юр.лицо' end as type
-	FROM
-		profile p, trade_unit t left join corporate c on (t.corporate_id = c.id)
-		left join individual i on (i.id = t.individual_id)	 
-		WHERE ( p.trade_unit_id = t.id ) 
-		-- AND p.user_id = 
-		ORDER BY p.user_id;
-
-/*		
- prof_id |         user         | is_active |      name      |   type   
----------+----------------------+-----------+----------------+----------
-       7 | Дима Холод           | N         | Австралопитек  | Юр.лицо
-       1 | Дима Холод           | N         | Звездолёты Инк | Юр.лицо
-       3 | Лёша Пчелкин         | N         | Звездолёты Инк | Юр.лицо
-       2 | Лёша Пчелкин         | N         |                | Физ.лицо
-       6 | Лёша Пчелкин         | N         | Австралопитек  | Юр.лицо
-       4 | Рома Дед             | N         |                | Физ.лицо
-       8 | Старикашка Эдельвейс | N         |                | Физ.лицо
-       5 | Старикашка Эдельвейс | N         | Австралопитек  | Юр.лицо
-(8 rows)
-*/		
 
 -- торгуются торги
 
@@ -177,4 +154,28 @@ select registerNewUser('Кот', 'Матроскин ', 'matros@eml.ru', null, '
 -- здесь исключение
 select registerNewUser('Шарик', 'Пёс', 'matros@eml.ru', null, '+ZZZXXXXXCCCCCVVVV');
 */
+
+SELECT p.id as prof_id, getUserSmartName(p.user_id) as user
+	, p.is_active is_active, c.name, 
+	case when i.id is not null then 'Физ.лицо' else 'Юр.лицо' end as type
+	FROM
+		profile p, trade_unit t left join corporate c on (t.corporate_id = c.id)
+		left join individual i on (i.id = t.individual_id)	 
+		WHERE ( p.trade_unit_id = t.id ) 
+		-- AND p.user_id = 
+		ORDER BY p.user_id;
+
+/*		
+ prof_id |         user         | is_active |      name      |   type   
+---------+----------------------+-----------+----------------+----------
+       7 | Дима Холод           | N         | Австралопитек  | Юр.лицо
+       1 | Дима Холод           | N         | Звездолёты Инк | Юр.лицо
+       3 | Лёша Пчелкин         | N         | Звездолёты Инк | Юр.лицо
+       2 | Лёша Пчелкин         | N         |                | Физ.лицо
+       6 | Лёша Пчелкин         | N         | Австралопитек  | Юр.лицо
+       4 | Рома Дед             | N         |                | Физ.лицо
+       8 | Старикашка Эдельвейс | N         |                | Физ.лицо
+       5 | Старикашка Эдельвейс | N         | Австралопитек  | Юр.лицо
+(8 rows)
+*/		
 
